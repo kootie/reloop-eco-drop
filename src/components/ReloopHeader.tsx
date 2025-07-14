@@ -13,9 +13,13 @@ interface ReloopHeaderProps {
   onViewPoints?: () => void;
   onViewStats?: () => void;
   onViewInfo?: () => void;
+  onViewSettings?: () => void;
+  onLogin?: () => void;
+  onRegister?: () => void;
+  user?: { id: string; phone_hash: string } | null;
 }
 
-export function ReloopHeader({ points = 0, onViewPoints, onViewStats, onViewInfo }: ReloopHeaderProps) {
+export function ReloopHeader({ points = 0, onViewPoints, onViewStats, onViewInfo, onViewSettings, onLogin, onRegister, user }: ReloopHeaderProps) {
   return (
     <header className="bg-gradient-eco text-primary-foreground p-4 shadow-eco sticky top-0 z-50">
       <div className="flex items-center justify-between max-w-md mx-auto">
@@ -62,7 +66,20 @@ export function ReloopHeader({ points = 0, onViewPoints, onViewStats, onViewInfo
                 Toxicity Guide
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
+              {!user && (
+                <>
+                  <DropdownMenuItem onClick={onLogin} className="cursor-pointer">
+                    <Award className="w-4 h-4 mr-2" />
+                    Login
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onRegister} className="cursor-pointer">
+                    <Award className="w-4 h-4 mr-2" />
+                    Register
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={onViewSettings} className="cursor-pointer">
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </DropdownMenuItem>

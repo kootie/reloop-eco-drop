@@ -9,6 +9,7 @@ export interface Bin {
   last_opened?: Date;
   electronics_count: number[];
   eta?: number; // walking time in minutes
+  type: 'e-waste' | 'plastic'; // Bin type: e-waste or plastic
 }
 
 export interface DeviceType {

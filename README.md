@@ -1,73 +1,61 @@
-# Welcome to your Lovable project
+# Reloop Eco Drop
 
-## Project info
+A modern web app for fast, gamified e-waste and plastic recycling via QR code deep links and interactive bin flows.
 
-**URL**: https://lovable.dev/projects/1cb1b82a-7d04-4ba6-829f-bdaf860e2df8
+## Features
 
-## How can I edit this code?
+- **QR-to-Bin Flow:**
+  - Scan a Reloop QR sticker to instantly land on a bin detail page.
+  - Deep-link support: `/drop?bin={bin_id}` route.
 
-There are several ways of editing your application.
+- **Bin Detail Screen:**
+  - Shows bin location on a static map with a pulsing marker and 5m accuracy circle.
+  - Displays bin nickname, address, fill level, and last emptied time.
+  - Capacity bar and live bin data (auto-refresh every 30s).
+  - "Navigate" button opens native map app (Apple/Google Maps).
 
-**Use Lovable**
+- **Accepted Items:**
+  - E-waste bins: Horizontal chips for each device type, color-coded by toxicity, with icons and details.
+  - Plastic bins: Simple info about accepted plastics (bottles, containers, etc.).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1cb1b82a-7d04-4ba6-829f-bdaf860e2df8) and start prompting.
+- **Drop Flow:**
+  - "Drop Item" button opens camera + GPS proof modal.
+  - Auto-captures GPS and guides user to include item in bin.
+  - Instant points reward and toast notification.
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Progress & Gamification:**
+  - Points system for drops.
+  - "View my points" and "Impact Stats" screens.
 
-**Use your preferred IDE**
+- **PWA Support:**
+  - Detects if opened in PWA or browser.
+  - Shows install banner for one-tap PWA install if not in app.
+  - Offline-first: bin/device lists cached for fast access.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **User Account:**
+  - Phone number login and registration (with name field).
+  - Settings modal: shows user info, last known location, device type, and allows updating/clearing location.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Modern UI:**
+  - Responsive, mobile-first design.
+  - Accessible, fast, and easy to use.
 
-Follow these steps:
+## Getting Started
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Install dependencies:
+   ```sh
+   npm install
+   # or
+   bun install
+   ```
+2. Start the dev server:
+   ```sh
+   npm run dev
+   # or
+   bun run dev
+   ```
+3. Open the app in your browser and scan a QR code or use `/drop?bin=bin-001`.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/1cb1b82a-7d04-4ba6-829f-bdaf860e2df8) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Notes
+- For map images, set your Google Maps Static API key in the code where indicated.
+- This is a demo/prototype; backend integration and real authentication are not yet implemented.

@@ -17,6 +17,7 @@ class ReloopAPI {
       door_open: false,
       electronics_count: [5, 3, 8, 12, 2, 6],
       eta: 3,
+      type: 'e-waste',
     },
     {
       id: 'bin-002', 
@@ -28,6 +29,7 @@ class ReloopAPI {
       door_open: false,
       electronics_count: [8, 5, 15, 20, 4, 10],
       eta: 7,
+      type: 'e-waste',
     },
     {
       id: 'bin-003',
@@ -39,6 +41,20 @@ class ReloopAPI {
       door_open: false,
       electronics_count: [3, 2, 6, 8, 1, 4],
       eta: 12,
+      type: 'e-waste',
+    },
+    // New plastic bin example
+    {
+      id: 'bin-004',
+      lat: 40.7306,
+      lng: -73.9352,
+      qr_code_url: 'https://reloop.city/drop?bin=bin-004',
+      is_online: true,
+      fill_level: 10,
+      door_open: false,
+      electronics_count: [],
+      eta: 5,
+      type: 'plastic',
     },
   ];
 

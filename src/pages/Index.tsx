@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { QRScanner } from '@/components/QRScanner';
@@ -12,14 +12,51 @@ import { Bin } from '@/types/reloop';
 import { api } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import heroImage from '@/assets/hero-reloop.jpg';
+import { useIsMobile } from '@/hooks/use-mobile';
+import Login from './Login';
+import Register from './Register';
 
-type AppState = 'welcome' | 'scan' | 'find' | 'drop' | 'complete' | 'stats' | 'guide';
+type AppState = 'welcome' | 'scan' | 'find' | 'drop' | 'complete' | 'stats' | 'guide' | 'settings' | 'login' | 'register';
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>('welcome');
   const [selectedBin, setSelectedBin] = useState<Bin | null>(null);
   const [userPoints, setUserPoints] = useState(245); // Mock points
   const [sessionPoints, setSessionPoints] = useState(0);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  const deferredPrompt = useRef(null);
+  const [user, setUser] = useState(null); // { id, phone_hash }
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const isMobile = useIsMobile();
+
+  // Detect if in PWA
+  const isInPWA = () => {
+    return window.matchMedia('(display-mode: standalone)').matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+  };
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      deferredPrompt.current = e;
+      if (!isInPWA()) {
+        setShowInstallBanner(true);
+      }
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt.current) {
+      deferredPrompt.current.prompt();
+      const { outcome } = await deferredPrompt.current.userChoice;
+      if (outcome === 'accepted') {
+        setShowInstallBanner(false);
+      }
+    }
+  };
 
   const handleScanResult = (binId: string) => {
     // In real app, fetch bin details
@@ -38,6 +75,7 @@ const Index = () => {
       fill_level: 35,
       door_open: false,
       electronics_count: [5, 3, 8, 12, 2, 6],
+      type: 'e-waste',
     };
     
     setSelectedBin(mockBin);
@@ -64,6 +102,17 @@ const Index = () => {
     setAppState('welcome');
     setSelectedBin(null);
   };
+
+  // Add location update/clear logic
+  const updateLocation = async () => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => setUserLocation(null),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
+  const clearLocation = () => setUserLocation(null);
 
   const renderContent = () => {
     switch (appState) {
@@ -167,6 +216,23 @@ const Index = () => {
       case 'drop':
         return selectedBin ? (
           <div className="space-y-4">
+            {/* PWA Install Banner */}
+            {showInstallBanner && !isInPWA() && (
+              <div className="bg-primary/90 text-primary-foreground p-3 rounded-lg flex items-center justify-between mb-2 shadow-lg">
+                <div>
+                  <span className="font-semibold">Open in Reloop</span>
+                  <span className="ml-2 text-sm opacity-80">Install the app for the best experience</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="secondary" onClick={handleInstallClick}>
+                    Install
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => setShowInstallBanner(false)}>
+                    ×
+                  </Button>
+                </div>
+              </div>
+            )}
             <Button 
               variant="outline" 
               onClick={() => setAppState('welcome')}
@@ -208,6 +274,69 @@ const Index = () => {
           </div>
         );
 
+      case 'settings':
+        return (
+          <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+            <Card className="p-6 max-w-md w-full relative">
+              <button
+                className="absolute top-2 right-2 text-xl text-muted-foreground hover:text-primary"
+                onClick={() => setAppState('welcome')}
+                aria-label="Close settings"
+              >
+                ×
+              </button>
+              <h2 className="text-2xl font-bold mb-4">Settings</h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="font-semibold mb-1">User ID:</div>
+                  <div className="text-muted-foreground">{user ? user.id : 'Not logged in'}</div>
+                </div>
+                <div>
+                  <div className="font-semibold mb-1">Mobile Device:</div>
+                  <div className="text-muted-foreground">{isMobile ? 'Yes' : 'No'}</div>
+                </div>
+                <div>
+                  <div className="font-semibold mb-1">Last Known Location:</div>
+                  <div className="text-muted-foreground">
+                    {userLocation ? `${userLocation.lat.toFixed(5)}, ${userLocation.lng.toFixed(5)}` : 'Unknown'}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Button size="sm" variant="secondary" onClick={updateLocation}>Update Location</Button>
+                    <Button size="sm" variant="outline" onClick={clearLocation}>Clear</Button>
+                  </div>
+                </div>
+                {!user && (
+                  <div className="pt-2">
+                    <Button variant="eco" className="w-full" onClick={() => setAppState('login')}>Login</Button>
+                    <Button variant="outline" className="w-full mt-2" onClick={() => setAppState('register')}>Register</Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </div>
+        );
+
+      case 'login':
+        return (
+          <Login
+            onLogin={userObj => {
+              setUser(userObj);
+              setAppState('welcome');
+            }}
+            onRegister={() => setAppState('register')}
+          />
+        );
+      case 'register':
+        return (
+          <Register
+            onRegister={userObj => {
+              setUser(userObj);
+              setAppState('welcome');
+            }}
+            onLogin={() => setAppState('login')}
+          />
+        );
+
       default:
         return null;
     }
@@ -219,6 +348,10 @@ const Index = () => {
         points={userPoints} 
         onViewStats={() => setAppState('stats')}
         onViewInfo={() => setAppState('guide')}
+        onViewSettings={() => setAppState('settings')}
+        onLogin={() => setAppState('login')}
+        onRegister={() => setAppState('register')}
+        user={user}
       />
       
       <main className="max-w-md mx-auto p-4">

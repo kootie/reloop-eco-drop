@@ -79,14 +79,12 @@ export function BinFinder({ onBinFound }: BinFinderProps) {
           <p className="text-muted-foreground mb-4">
             We'll help you find the closest available bin for your e-waste
           </p>
-          
           {error && (
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
               <p className="text-sm text-destructive">{error}</p>
               <p className="text-xs text-muted-foreground mt-1">Using demo location instead</p>
             </div>
           )}
-          
           <Button 
             onClick={requestLocation} 
             disabled={loading}
@@ -122,14 +120,10 @@ export function BinFinder({ onBinFound }: BinFinderProps) {
                 <span className="font-medium">{nearestBin.eta} min</span>
               </div>
             </div>
-            
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Fill level:</span>
-              <span className={`font-medium ${getFillLevelColor(nearestBin.fill_level)}`}>
-                {nearestBin.fill_level}%
-              </span>
+              <span className={`font-medium ${getFillLevelColor(nearestBin.fill_level)}`}>{nearestBin.fill_level}%</span>
             </div>
-
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Status:</span>
               <span className={nearestBin.is_online ? 'text-toxicity-1' : 'text-destructive'}>
@@ -138,27 +132,44 @@ export function BinFinder({ onBinFound }: BinFinderProps) {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <Button 
-              onClick={navigateToBin}
-              variant="eco" 
-              size="lg" 
-              className="w-full"
-              disabled={!nearestBin.is_online}
-            >
-              <Navigation className="mr-2" />
-              Navigate to Bin
-            </Button>
-            
-            <Button 
-              onClick={confirmArrival}
-              variant="outline" 
-              className="w-full"
-              disabled={!nearestBin.is_online}
-            >
-              I'm at the Bin
-            </Button>
-          </div>
+          {/* Accepted Items Section */}
+          {nearestBin.type === 'e-waste' ? (
+            <div className="mb-4">
+              <span className="block text-sm font-semibold mb-2">Accepted Devices:</span>
+              <div className="flex flex-row gap-2 overflow-x-auto pb-2">
+                {/* Render device chips here if desired, or leave for DropInterface */}
+                <span className="text-xs text-muted-foreground">See next step for device selection.</span>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-4">
+              <span className="block text-sm font-semibold mb-2">Accepted:</span>
+              <div className="flex flex-row gap-2 overflow-x-auto pb-2">
+                <span className="px-3 py-1 rounded-full bg-toxicity-1/10 text-toxicity-1 text-xs font-medium border border-toxicity-1/20">Clean plastic bottles</span>
+                <span className="px-3 py-1 rounded-full bg-toxicity-1/10 text-toxicity-1 text-xs font-medium border border-toxicity-1/20">Plastic containers</span>
+                <span className="px-3 py-1 rounded-full bg-toxicity-1/10 text-toxicity-1 text-xs font-medium border border-toxicity-1/20">No bags/film</span>
+              </div>
+            </div>
+          )}
+
+          <Button 
+            onClick={navigateToBin}
+            variant="eco" 
+            size="lg" 
+            className="w-full"
+            disabled={!nearestBin.is_online}
+          >
+            <Navigation className="mr-2" />
+            Navigate to Bin
+          </Button>
+          <Button 
+            onClick={confirmArrival}
+            variant="outline" 
+            className="w-full"
+            disabled={!nearestBin.is_online}
+          >
+            I'm at the Bin
+          </Button>
         </Card>
       )}
     </div>
