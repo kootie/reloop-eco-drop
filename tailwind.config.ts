@@ -61,7 +61,23 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				'toxicity': {
+					'1': 'hsl(var(--toxicity-1))',
+					'2': 'hsl(var(--toxicity-2))',
+					'3': 'hsl(var(--toxicity-3))',
+					'4': 'hsl(var(--toxicity-4))',
+					'5': 'hsl(var(--toxicity-5))'
 				}
+			},
+			backgroundImage: {
+				'gradient-primary': 'var(--gradient-primary)',
+				'gradient-eco': 'var(--gradient-eco)',
+				'gradient-card': 'var(--gradient-card)'
+			},
+			boxShadow: {
+				'eco': 'var(--shadow-eco)',
+				'card-eco': 'var(--shadow-card)'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
