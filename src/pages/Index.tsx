@@ -5,13 +5,15 @@ import { QRScanner } from '@/components/QRScanner';
 import { BinFinder } from '@/components/BinFinder';
 import { DropInterface } from '@/components/DropInterface';
 import { ReloopHeader } from '@/components/ReloopHeader';
+import { ToxicityGuide } from '@/components/ToxicityGuide';
+import { ImpactStats } from '@/components/ImpactStats';
 import { Home, QrCode, MapPin, Award } from 'lucide-react';
 import { Bin } from '@/types/reloop';
 import { api } from '@/services/api';
 import { toast } from '@/hooks/use-toast';
 import heroImage from '@/assets/hero-reloop.jpg';
 
-type AppState = 'welcome' | 'scan' | 'find' | 'drop' | 'complete';
+type AppState = 'welcome' | 'scan' | 'find' | 'drop' | 'complete' | 'stats' | 'guide';
 
 const Index = () => {
   const [appState, setAppState] = useState<AppState>('welcome');
@@ -65,6 +67,12 @@ const Index = () => {
 
   const renderContent = () => {
     switch (appState) {
+      case 'stats':
+        return <ImpactStats onClose={() => setAppState('welcome')} userPoints={userPoints} />;
+      
+      case 'guide':
+        return <ToxicityGuide onClose={() => setAppState('welcome')} />;
+        
       case 'welcome':
         return (
           <div className="space-y-6">
@@ -207,7 +215,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <ReloopHeader points={userPoints} />
+      <ReloopHeader 
+        points={userPoints} 
+        onViewStats={() => setAppState('stats')}
+        onViewInfo={() => setAppState('guide')}
+      />
       
       <main className="max-w-md mx-auto p-4">
         {renderContent()}

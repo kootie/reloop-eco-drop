@@ -125,6 +125,7 @@ export function DropInterface({ bin, onComplete }: DropInterfaceProps) {
               device={device}
               onSelect={setSelectedDevice}
               selected={selectedDevice?.id === device.id}
+              showDetails={selectedDevice?.id === device.id}
             />
           ))}
         </div>
