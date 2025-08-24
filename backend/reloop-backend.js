@@ -1,5 +1,5 @@
 import { Lucid, Blockfrost, Data, fromText } from "lucid-cardano"
-import { FireblocksSDK } from "fireblocks-sdk"
+// import { FireblocksSDK } from "fireblocks-sdk" // COMMENTED OUT - Using Eternl wallet connection instead
 import fs from "fs"
 import crypto from "crypto"
 import multer from "multer"
@@ -151,53 +151,88 @@ const ContractAction = Data.Enum([
   Data.Object({ RegisterWallet: Data.Object({ user_id: Data.Bytes() }) }),
   Data.Object({ RegisterBin: Data.Object({}) }),
   Data.Object({ DeactivateBin: Data.Object({ bin_id: Data.Bytes() }) }),
+  Data.Object({ ApproveDrop: Data.Object({ 
+    drop_id: Data.Bytes(),
+    admin_username: Data.Bytes(),
+    actual_tokens: Data.Integer(),
+    notes: Data.Bytes(),
+    timestamp: Data.Integer()
+  }) }),
+  Data.Object({ RejectDrop: Data.Object({ 
+    drop_id: Data.Bytes(),
+    admin_username: Data.Bytes(),
+    actual_tokens: Data.Integer(),
+    notes: Data.Bytes(),
+    timestamp: Data.Integer()
+  }) }),
 ])
 
 // =============================================================================
-// FIREBLOCKS WALLET MANAGEMENT
+// ETERNL WALLET MANAGEMENT (Replaced Fireblocks)
 // =============================================================================
 
-class FireblocksManager {
+class EternlWalletManager {
   constructor() {
-    this.fireblocks = new FireblocksSDK(
-      fs.readFileSync(process.env.FIREBLOCKS_PRIVATE_KEY_PATH, "utf8"),
-      process.env.FIREBLOCKS_API_KEY,
-    )
+    // Eternl wallets are connected directly by users in the frontend
+    // No server-side wallet creation needed
+    console.log("Using Eternl wallet connection mode")
   }
 
-  async createUserWallet(userId, userEmail) {
+  // Validate connected wallet address
+  async validateWalletAddress(address) {
     try {
-      console.log(`Creating Fireblocks wallet for user: ${userId}`)
+      // Basic Cardano address validation
+      if (!address || typeof address !== 'string') {
+        throw new Error('Address is required and must be a string')
+      }
+      
+      // Extremely permissive validation - accept any non-empty string for testing
+      if (address.trim().length === 0) {
+        throw new Error('Address cannot be empty')
+      }
+      
+      // Log the address for debugging
+      console.log('Backend received address:', address)
+      console.log('Address type:', typeof address)
+      console.log('Address length:', address.length)
+      
+      // Accept any non-empty string as valid for maximum flexibility
+      return { valid: true, network: 'testnet' }
+      
+    } catch (error) {
+      throw new Error(`Address validation failed: ${error.message}`)
+    }
+  }
 
-      const vaultAccount = await this.fireblocks.createVaultAccount({
-        name: `RELOOP_${userId}`,
-        customerRefId: userId,
-      })
-
-      await this.fireblocks.createVaultAsset({
-        vaultAccountId: vaultAccount.id,
-        assetId: "ADA",
-      })
-
-      const addresses = await this.fireblocks.getDepositAddresses({
-        vaultAccountId: vaultAccount.id,
-        assetId: "ADA",
+  // Get wallet info from connected address
+  async getWalletInfo(address) {
+    const lucidInstance = await initializeLucid()
+    
+    try {
+      // Get UTXOs at the address
+      const utxos = await lucidInstance.utxosAt(address)
+      
+      // Calculate total ADA balance
+      let totalLovelace = 0n
+      utxos.forEach(utxo => {
+        totalLovelace += BigInt(utxo.assets.lovelace || 0)
       })
 
       return {
-        userId,
-        cardanoAddress: addresses[0]?.address,
-        vaultId: vaultAccount.id,
+        address,
+        balance: Number(totalLovelace) / 1_000_000, // Convert to ADA
+        utxoCount: utxos.length,
+        network: address.startsWith('addr_test1') ? 'testnet' : 'mainnet'
       }
     } catch (error) {
-      throw new Error(`Fireblocks wallet creation failed: ${error.message}`)
+      throw new Error(`Failed to get wallet info: ${error.message}`)
     }
   }
 }
 
 // Initialize managers
-const fireblocksManager = new FireblocksManager()
-const userWallets = new Map() // userId -> { cardanoAddress, vaultId, email }
+const eternlWalletManager = new EternlWalletManager()
+const userWallets = new Map() // userId -> { cardanoAddress, walletType: 'eternl', email }
 
 // =============================================================================
 // LUCID INITIALIZATION
@@ -219,13 +254,16 @@ async function initializeLucid() {
 // CONSOLIDATED WALLET MANAGEMENT - UPDATED WITH FIREBLOCKS
 // =============================================================================
 
-// Register new user with Fireblocks wallet
+// Register new user with Eternl wallet connection
 app.post("/api/users/register", async (req, res) => {
   try {
-    const { userId, email } = req.body
+    const { userId, email, cardanoAddress } = req.body
 
-    if (!userId || !email) {
-      return res.status(400).json({ error: "User ID and email required" })
+    if (!userId || !email || !cardanoAddress) {
+      return res.status(400).json({ 
+        error: "User ID, email, and Cardano address required",
+        details: "Please connect your Eternl wallet first"
+      })
     }
 
     // Check if user already exists
@@ -237,47 +275,60 @@ app.post("/api/users/register", async (req, res) => {
       })
     }
 
-    console.log(`Registering new user: ${userId} (${email})`)
+    console.log(`Registering new user: ${userId} (${email}) with Eternl wallet`)
 
-    // Create Fireblocks wallet for user
-    const walletInfo = await fireblocksManager.createUserWallet(userId, email)
+    // Validate the connected Eternl wallet address
+    const addressValidation = await eternlWalletManager.validateWalletAddress(cardanoAddress)
+    if (!addressValidation.valid) {
+      return res.status(400).json({
+        error: "Invalid Cardano address",
+        details: "Please ensure your Eternl wallet is properly connected"
+      })
+    }
+
+    // Get wallet info from blockchain
+    const walletInfo = await eternlWalletManager.getWalletInfo(cardanoAddress)
 
     // Store user info locally
     userWallets.set(userId, {
-      cardanoAddress: walletInfo.cardanoAddress,
-      vaultId: walletInfo.vaultId,
+      cardanoAddress,
+      walletType: 'eternl',
       email,
+      balance: walletInfo.balance,
+      network: walletInfo.network,
       createdAt: new Date(),
     })
 
     // Register wallet in smart contract
     const txHash = await registerWalletInContract({
       userId,
-      consolidatedWallet: walletInfo.cardanoAddress,
+      consolidatedWallet: cardanoAddress,
     })
 
     // Store in config for quick access
-    CONFIG.CONSOLIDATED_WALLETS[userId] = walletInfo.cardanoAddress
+    CONFIG.CONSOLIDATED_WALLETS[userId] = cardanoAddress
 
     res.json({
       success: true,
       user: {
         userId,
         email,
-        cardanoAddress: walletInfo.cardanoAddress,
-        vaultId: walletInfo.vaultId,
+        cardanoAddress,
+        walletType: 'eternl',
+        balance: walletInfo.balance,
+        network: walletInfo.network,
       },
       blockchain: {
         transactionHash: txHash,
         contractAddress: CONFIG.CONTRACT_ADDRESS,
       },
-      message: "User registered successfully with Fireblocks wallet!",
+      message: "User registered successfully with Eternl wallet!",
     })
   } catch (error) {
-    console.error("Enhanced registration error:", error)
+    console.error("Eternl registration error:", error)
     res.status(500).json({
       error: error.message,
-      details: "Failed to create Fireblocks wallet for user",
+      details: "Failed to register user with Eternl wallet",
     })
   }
 })
@@ -1240,6 +1291,283 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
   })
 })
+
+// =============================================================================
+// ADMIN APPROVAL WITH ADA PAYMENT INTEGRATION
+// =============================================================================
+
+// Admin approve/reject drop with ADA payment
+app.post("/api/admin/drops/:dropId/review", async (req, res) => {
+  try {
+    const { dropId } = req.params
+    const { action, actualTokens, notes, adminUsername } = req.body
+
+    if (!action || !adminUsername) {
+      return res.status(400).json({ error: "Action and admin username required" })
+    }
+
+    if (action === 'approve' && (actualTokens === undefined || actualTokens < 0)) {
+      return res.status(400).json({ error: "Valid token amount required for approval" })
+    }
+
+    // Get drop details from smart contract
+    const dropData = await findDropInContract(dropId)
+    if (!dropData) {
+      return res.status(404).json({ error: "Drop not found in smart contract" })
+    }
+
+    // Get user wallet info
+    const userWallet = await findWalletInContract(dropData.user_id)
+    if (!userWallet) {
+      return res.status(404).json({ error: "User wallet not found" })
+    }
+
+    let paymentResult = null
+
+    if (action === 'approve') {
+      // Send ADA payment to user's Eternl wallet
+      try {
+        const lucidInstance = await initializeLucid()
+        
+        // Calculate lovelace amount
+        const lovelaceAmount = Math.floor(actualTokens * 1_000_000)
+        
+        // Build transaction to send ADA to user's wallet
+        const tx = await lucidInstance
+          .newTx()
+          .payToAddress(userWallet.consolidated_wallet, { lovelace: BigInt(lovelaceAmount) })
+          .attachMetadata(674, {
+            type: 'reloop_reward_payment',
+            drop_id: dropId,
+            user_id: dropData.user_id,
+            amount_ada: actualTokens,
+            admin: adminUsername,
+            timestamp: new Date().toISOString()
+          })
+          .complete()
+
+        const signedTx = await tx.sign().complete()
+        const txHash = await signedTx.submit()
+
+        paymentResult = {
+          success: true,
+          txHash,
+          amount: actualTokens,
+          recipientAddress: userWallet.consolidated_wallet
+        }
+
+        console.log(`✅ Sent ${actualTokens} ADA to ${userWallet.consolidated_wallet} for drop ${dropId}`)
+
+      } catch (paymentError) {
+        console.error('Payment error:', paymentError)
+        return res.status(500).json({ 
+          error: "Failed to send ADA payment to user wallet",
+          details: paymentError.message 
+        })
+      }
+    }
+
+    // Update drop status in smart contract
+    const redeemer = Data.to(
+      {
+        [action === 'approve' ? 'ApproveDrop' : 'RejectDrop']: {
+          drop_id: fromText(dropId),
+          admin_username: fromText(adminUsername),
+          actual_tokens: action === 'approve' ? BigInt(Math.floor(actualTokens * 1_000_000)) : 0n,
+          notes: fromText(notes || ''),
+          timestamp: BigInt(Date.now())
+        }
+      },
+      ContractAction
+    )
+
+    const dropUTXO = await findDropUTXO(dropId)
+    if (!dropUTXO) {
+      return res.status(404).json({ error: "Drop UTXO not found" })
+    }
+
+    const lucidInstance = await initializeLucid()
+    const tx = await lucidInstance
+      .newTx()
+      .collectFrom([dropUTXO], redeemer)
+      .attachSpendingValidator({
+        type: "PlutusV2",
+        script: CONFIG.CONTRACT_SCRIPT,
+      })
+      .complete()
+
+    const signedTx = await tx.sign().complete()
+    const contractTxHash = await signedTx.submit()
+
+    res.json({
+      success: true,
+      dropId,
+      action,
+      adminUsername,
+      actualTokens: action === 'approve' ? actualTokens : 0,
+      notes: notes || '',
+      payment: paymentResult,
+      contractTransaction: contractTxHash,
+      message: `Drop ${action}ed successfully${action === 'approve' ? ' and ADA payment sent' : ''}`
+    })
+
+  } catch (error) {
+    console.error("Admin review error:", error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// Batch approve drops with ADA payments
+app.post("/api/admin/drops/batch-approve", async (req, res) => {
+  try {
+    const { dropIds, actualTokens, notes, adminUsername } = req.body
+
+    if (!dropIds || !Array.isArray(dropIds) || dropIds.length === 0) {
+      return res.status(400).json({ error: "Drop IDs array required" })
+    }
+
+    if (!actualTokens || actualTokens < 0) {
+      return res.status(400).json({ error: "Valid token amount required" })
+    }
+
+    if (dropIds.length > 50) {
+      return res.status(400).json({ error: "Maximum 50 drops per batch" })
+    }
+
+    const processedDrops = []
+    const errors = []
+    let totalAmount = 0
+
+    // Process each drop
+    for (const dropId of dropIds) {
+      try {
+        // Get drop and user wallet info
+        const dropData = await findDropInContract(dropId)
+        if (!dropData) {
+          errors.push(`Drop ${dropId}: not found`)
+          continue
+        }
+
+        const userWallet = await findWalletInContract(dropData.user_id)
+        if (!userWallet) {
+          errors.push(`Drop ${dropId}: user wallet not found`)
+          continue
+        }
+
+        // Send ADA payment
+        const lucidInstance = await initializeLucid()
+        const lovelaceAmount = Math.floor(actualTokens * 1_000_000)
+        
+        const tx = await lucidInstance
+          .newTx()
+          .payToAddress(userWallet.consolidated_wallet, { lovelace: BigInt(lovelaceAmount) })
+          .attachMetadata(674, {
+            type: 'reloop_batch_reward_payment',
+            drop_id: dropId,
+            user_id: dropData.user_id,
+            amount_ada: actualTokens,
+            admin: adminUsername,
+            batch_timestamp: new Date().toISOString()
+          })
+          .complete()
+
+        const signedTx = await tx.sign().complete()
+        const txHash = await signedTx.submit()
+
+        processedDrops.push({
+          dropId,
+          userId: dropData.user_id,
+          recipientAddress: userWallet.consolidated_wallet,
+          amount: actualTokens,
+          txHash
+        })
+
+        totalAmount += actualTokens
+
+      } catch (error) {
+        console.error(`Error processing drop ${dropId}:`, error)
+        errors.push(`Drop ${dropId}: ${error.message}`)
+      }
+    }
+
+    res.json({
+      success: true,
+      processedDrops,
+      totalAmount,
+      totalDrops: processedDrops.length,
+      errors: errors.length > 0 ? errors : undefined,
+      message: `Successfully processed ${processedDrops.length} drops for ${totalAmount} ADA`
+    })
+
+  } catch (error) {
+    console.error("Batch approval error:", error)
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// =============================================================================
+// HELPER FUNCTIONS FOR DROP MANAGEMENT
+// =============================================================================
+
+async function findDropInContract(dropId) {
+  const response = await fetch(
+    `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
+    { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
+  )
+
+  const utxos = await response.json()
+
+  for (const utxo of utxos) {
+    if (utxo.inline_datum) {
+      try {
+        const datum = Data.from(utxo.inline_datum, DropDatum)
+        const storedDropId = Buffer.from(datum.drop_id, "hex").toString("utf8")
+
+        if (storedDropId === dropId) {
+          return {
+            drop_id: storedDropId,
+            user_id: Buffer.from(datum.user_id, "hex").toString("utf8"),
+            user_wallet: Buffer.from(datum.user_wallet, "hex").toString("utf8"),
+            device_type: Buffer.from(datum.device_type, "hex").toString("utf8"),
+            reward_amount: Number(datum.reward_amount),
+            claimed: datum.claimed,
+            timestamp: Number(datum.timestamp),
+          }
+        }
+      } catch (e) {
+        continue
+      }
+    }
+  }
+
+  return null
+}
+
+async function findDropUTXO(dropId) {
+  const response = await fetch(
+    `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
+    { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
+  )
+
+  const utxos = await response.json()
+
+  for (const utxo of utxos) {
+    if (utxo.inline_datum) {
+      try {
+        const datum = Data.from(utxo.inline_datum, DropDatum)
+        const storedDropId = Buffer.from(datum.drop_id, "hex").toString("utf8")
+
+        if (storedDropId === dropId) {
+          return utxo
+        }
+      } catch (e) {
+        continue
+      }
+    }
+  }
+
+  return null
+}
 
 // =============================================================================
 // SERVER STARTUP

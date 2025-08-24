@@ -26,7 +26,24 @@ html {
 }
         `}</style>
       </head>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning={true}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Handle ethereum property conflicts from browser extensions
+              if (typeof window !== 'undefined') {
+                const originalDefineProperty = Object.defineProperty;
+                Object.defineProperty = function(obj, prop, descriptor) {
+                  if (obj === window && prop === 'ethereum') {
+                    // Skip redefining ethereum property to avoid conflicts
+                    return obj;
+                  }
+                  return originalDefineProperty.call(this, obj, prop, descriptor);
+                };
+              }
+            `,
+          }}
+        />
         <TranslationProvider>{children}</TranslationProvider>
       </body>
     </html>

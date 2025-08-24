@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, MapPin, Navigation, Recycle } from "lucide-react"
+import { ArrowLeft, MapPin, Navigation, Recycle, QrCode } from "lucide-react"
 import { useTranslation } from "@/hooks/use-translation"
 import LanguageSwitcher from "@/components/language-switcher"
+import QRBinInfo from "@/components/qr-bin-info"
+import DropSubmission from "@/components/drop-submission"
 
 interface BinLocation {
   id: string
@@ -31,7 +34,7 @@ const ZUGDIDI_BINS: BinLocation[] = [
       lat: 42.5088,
       lng: 41.8709,
     },
-    qrCode: "RELOOP_BIN_zugdidi_001_1703123456789",
+    qrCode: "RELOOP_BIN_001_KIKALISVILI_2024",
     status: "active",
     totalDrops: 0,
   },
@@ -43,7 +46,7 @@ const ZUGDIDI_BINS: BinLocation[] = [
       lat: 42.5095,
       lng: 41.8715,
     },
-    qrCode: "RELOOP_BIN_zugdidi_002_1703123456790",
+    qrCode: "RELOOP_BIN_002_TRADECENTER_2024",
     status: "active",
     totalDrops: 0,
   },
@@ -56,13 +59,24 @@ interface MapViewProps {
 }
 
 export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
+  const router = useRouter()
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [selectedBin, setSelectedBin] = useState<BinLocation | null>(null)
   const [isLoadingLocation, setIsLoadingLocation] = useState(false)
   const [bins, setBins] = useState<BinLocation[]>(ZUGDIDI_BINS)
   const [isLoadingBins, setIsLoadingBins] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { t } = useTranslation()
+  const [showQRInfo, setShowQRInfo] = useState<string | null>(null)
+  const [showDropForm, setShowDropForm] = useState<BinLocation | null>(null)
+  const { t, isHydrated } = useTranslation()
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
 
   const getDefaultBins = (): BinLocation[] => [
     {
@@ -73,7 +87,7 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
         lat: 42.5088,
         lng: 41.8709,
       },
-      qrCode: "RELOOP_BIN_zugdidi_001_1703123456789",
+      qrCode: "RELOOP_BIN_001_KIKALISVILI_2024",
       status: "active",
       totalDrops: 0,
     },
@@ -85,7 +99,7 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
         lat: 42.5095,
         lng: 41.8715,
       },
-      qrCode: "RELOOP_BIN_zugdidi_002_1703123456790",
+      qrCode: "RELOOP_BIN_002_TRADECENTER_2024",
       status: "active",
       totalDrops: 0,
     },
@@ -106,13 +120,16 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
       if (data.success && data.bins.length > 0) {
         setBins(
           data.bins.map((bin: any) => ({
-            id: bin.binId,
-            name: bin.binId === "zugdidi_001" ? t.locations.kikalisviliBin : t.locations.tradeCenterMall,
-            address: bin.binId === "zugdidi_001" ? t.locations.kikalisviliAddress : t.locations.tradeCenterAddress,
-            coordinates: bin.location,
-            qrCode: bin.qrCode,
-            status: "active",
-            totalDrops: bin.totalDrops || 0,
+            id: bin.id,
+            name: bin.location_name ?? bin.name ?? 'Recycling Bin',
+            address: bin.address ?? '',
+            coordinates: {
+              lat: typeof bin.latitude === 'number' ? bin.latitude : Number(bin.latitude) || 0,
+              lng: typeof bin.longitude === 'number' ? bin.longitude : Number(bin.longitude) || 0,
+            },
+            qrCode: bin.qr_code ?? bin.qrCode ?? '',
+            status: (bin.is_active && bin.is_operational) ? 'active' : (bin.status || 'inactive'),
+            totalDrops: bin.total_drops ?? bin.totalDrops ?? 0,
           })),
         )
       } else {
@@ -142,20 +159,26 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
         (error) => {
           console.error("Error getting location:", error)
           setIsLoadingLocation(false)
+          setError("Location access denied. Using default location.")
           // Default to Zugdidi center if location fails
           setUserLocation({
             lat: 42.5092,
             lng: 41.8712,
           })
+          // Clear error after 3 seconds
+          setTimeout(() => setError(null), 3000)
         },
       )
     } else {
       setIsLoadingLocation(false)
+      setError("Geolocation not supported. Using default location.")
       // Default to Zugdidi center
       setUserLocation({
         lat: 42.5092,
         lng: 41.8712,
       })
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000)
     }
   }
 
@@ -171,7 +194,9 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
   }
 
   const getDistanceToUser = (bin: BinLocation) => {
-    if (!userLocation) return null
+    if (!userLocation || !bin.coordinates || typeof bin.coordinates.lat !== 'number' || typeof bin.coordinates.lng !== 'number') {
+      return null
+    }
     const distance = calculateDistance(userLocation.lat, userLocation.lng, bin.coordinates.lat, bin.coordinates.lng)
     return distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`
   }
@@ -180,10 +205,36 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
     setSelectedBin(bin)
   }
 
-  const handleStartDrop = () => {
+  const handleViewQR = (bin: BinLocation) => {
+    if (bin.qrCode) {
+      router.push(`/qr/${encodeURIComponent(bin.qrCode)}`)
+    }
+  }
+
+  const handleCloseQR = () => {
+    setShowQRInfo(null)
+  }
+
+  const handleStartDrop = (bin: BinLocation) => {
+    if (bin.status === 'active') {
+      setShowDropForm(bin)
+      setShowQRInfo(null)
+    }
+  }
+
+  const handleStartDropFromSelection = () => {
     if (selectedBin) {
       onSelectBin(selectedBin)
     }
+  }
+
+  const handleDropSuccess = () => {
+    setShowDropForm(null)
+    // Optionally show a success message or redirect
+  }
+
+  const handleDropCancel = () => {
+    setShowDropForm(null)
   }
 
   return (
@@ -278,6 +329,32 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
                         >
                           {bin.status}
                         </Badge>
+                        <div className="ml-auto flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleViewQR(bin)
+                            }}
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                          >
+                            <QrCode className="w-4 h-4 mr-1" />
+                            QR Info
+                          </Button>
+                          {bin.status === 'active' && (
+                            <Button
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleStartDrop(bin)
+                              }}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Drop
+                            </Button>
+                          )}
+                        </div>
                       </div>
                       <p className="text-sm text-gray-600 mb-2">{bin.address}</p>
                       <div className="flex items-center gap-4 text-xs text-green-600">
@@ -294,7 +371,10 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
                     <div className="text-right">
                       <p className="text-xs text-gray-500 mb-1">{t.map.coordinates}</p>
                       <p className="text-xs font-mono text-green-600">
-                        {bin.coordinates.lat.toFixed(4)}, {bin.coordinates.lng.toFixed(4)}
+                        {bin.coordinates && typeof bin.coordinates.lat === 'number' && typeof bin.coordinates.lng === 'number'
+                          ? `${bin.coordinates.lat.toFixed(4)}, ${bin.coordinates.lng.toFixed(4)}`
+                          : 'N/A'
+                        }
                       </p>
                     </div>
                   </div>
@@ -303,6 +383,55 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
             ))
           )}
         </div>
+
+        {/* Drop Submission Form */}
+        {showDropForm && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-green-800">Submit E-Waste Drop</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDropCancel}
+                className="border-gray-200 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+            </div>
+            <DropSubmission
+              bin={showDropForm}
+              user={user}
+              onSuccess={handleDropSuccess}
+              onCancel={handleDropCancel}
+            />
+          </div>
+        )}
+
+        {/* QR Code Information */}
+        {showQRInfo && !showDropForm && (
+          <div className="mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-green-800">QR Code Information</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCloseQR}
+                className="border-gray-200 text-gray-700 hover:bg-gray-50"
+              >
+                Close
+              </Button>
+            </div>
+            <QRBinInfo 
+              qrCode={showQRInfo} 
+              onStartDrop={() => {
+                const bin = bins.find(b => b.qrCode === showQRInfo)
+                if (bin) {
+                  handleStartDrop(bin)
+                }
+              }}
+            />
+          </div>
+        )}
 
         {/* Selected Bin Actions */}
         {selectedBin && (
@@ -315,7 +444,7 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
             </CardHeader>
             <CardContent>
               <div className="flex gap-3">
-                <Button onClick={handleStartDrop} className="bg-green-600 hover:bg-green-700">
+                <Button onClick={handleStartDropFromSelection} className="bg-green-600 hover:bg-green-700">
                   {t.map.startDropProcess}
                 </Button>
                 <Button

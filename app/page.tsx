@@ -2,16 +2,17 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { MapPin, Recycle } from "lucide-react"
+import { MapPin, Recycle, Wallet, LogOut, Settings } from "lucide-react"
 import MapView from "@/components/map-view"
 import DropProcess from "@/components/drop-process"
+import AuthScreen from "@/components/auth-screen"
+import EternlWalletConnector from "@/components/eternl-wallet-connector"
 import LanguageSwitcher from "@/components/language-switcher"
 import { useTranslation } from "@/hooks/use-translation"
+import Link from "next/link"
 
 type View = "home" | "map" | "drop"
 
@@ -25,21 +26,172 @@ interface BinLocation {
   totalDrops: number
 }
 
+interface User {
+  userId: string
+  email: string
+  fullName: string
+  cardanoAddress?: string
+  token: string
+  walletType?: string
+  network?: string
+  currentBalanceAda?: number
+  totalEarnedAda?: number
+  pendingRewardsAda?: number
+  totalDrops?: number
+  successfulDrops?: number
+  isVerified?: boolean
+}
+
 export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState<{ userId: string; email: string; cardanoAddress: string } | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [currentView, setCurrentView] = useState<View>("home")
   const [selectedBin, setSelectedBin] = useState<BinLocation | null>(null)
-  const { t } = useTranslation()
+  const [isMounted, setIsMounted] = useState(false)
+  const [showWalletConnect, setShowWalletConnect] = useState(false)
+  const { t, isHydrated } = useTranslation()
+
+  useEffect(() => {
+    // Add a small delay to ensure DOM is completely ready and browser extensions have loaded
+    const timer = setTimeout(() => {
+      setIsMounted(true)
+      // Check for stored authentication
+      checkStoredAuth()
+    }, 100)
+    
+    return () => clearTimeout(timer)
+  }, [])
+
+  const checkStoredAuth = () => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken')
+      const userData = localStorage.getItem('userData')
+      
+      if (token && userData) {
+        try {
+          const parsedUserData = JSON.parse(userData)
+          setUser({ ...parsedUserData, token })
+          setIsAuthenticated(true)
+        } catch (error) {
+          console.error('Error parsing stored user data:', error)
+          localStorage.removeItem('authToken')
+          localStorage.removeItem('userData')
+        }
+      }
+    }
+  }
+
+  const handleAuth = (userData: User) => {
+    setUser(userData)
+    setIsAuthenticated(true)
+    
+    // Store auth data
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('authToken', userData.token)
+      localStorage.setItem('userData', JSON.stringify(userData))
+    }
+    
+    // Show wallet connection if no wallet connected
+    if (!userData.cardanoAddress) {
+      setShowWalletConnect(true)
+    }
+  }
+
+  const handleWalletConnected = async (walletInfo: {
+    address: string
+    balance: number
+    network: 'testnet' | 'mainnet'
+  }) => {
+    if (!user) return
+
+    try {
+      const response = await fetch('/api/auth/wallet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          cardanoAddress: walletInfo.address,
+          walletType: 'eternl',
+          network: walletInfo.network
+        })
+      })
+
+      const data = await response.json()
+      
+      if (data.success) {
+        const updatedUser = { ...user, ...data.user }
+        setUser(updatedUser)
+        setShowWalletConnect(false)
+        
+        // Update stored user data
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('userData', JSON.stringify(updatedUser))
+        }
+      } else {
+        console.error('Failed to update wallet info:', data.error)
+      }
+    } catch (error) {
+      console.error('Error connecting wallet:', error)
+    }
+  }
+
+  const handleLogout = () => {
+    setIsAuthenticated(false)
+    setUser(null)
+    setCurrentView("home")
+    setSelectedBin(null)
+    setShowWalletConnect(false)
+    
+    // Clear stored auth data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userData')
+    }
+  }
+
+  if (!isMounted || !isHydrated) {
+    return null // Return null on server side to prevent hydration mismatch
+  }
 
   if (!isAuthenticated) {
+    return <AuthScreen onAuth={handleAuth} />
+  }
+
+  // Show wallet connection modal if authenticated but no wallet connected
+  if (showWalletConnect && user) {
     return (
-      <AuthScreen
-        onAuth={(userData) => {
-          setUser(userData)
-          setIsAuthenticated(true)
-        }}
-      />
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-6">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Wallet className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-green-800 mb-2">
+              Connect Your Wallet
+            </h1>
+            <p className="text-green-600 mb-6">
+              Connect your Cardano wallet to start earning ADA rewards for e-waste recycling
+            </p>
+          </div>
+          
+          <EternlWalletConnector
+            onWalletConnected={handleWalletConnected}
+            onWalletDisconnected={() => {}}
+          />
+          
+          <div className="text-center">
+            <Button
+              variant="outline"
+              onClick={() => setShowWalletConnect(false)}
+              className="border-green-200 text-green-700 hover:bg-green-50"
+            >
+              Skip for Now
+            </Button>
+          </div>
+        </div>
+      </div>
     )
   }
 
@@ -86,9 +238,34 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <div className="text-right">
-              <p className="text-sm text-gray-600">{user?.email}</p>
-              <p className="text-xs text-green-600">{t.app.walletConnected}</p>
+              <p className="text-sm text-gray-600">{user?.fullName || user?.email}</p>
+              <div className="flex items-center gap-2">
+                {user?.cardanoAddress ? (
+                  <span className="text-xs text-green-600 flex items-center gap-1">
+                    <Wallet className="w-3 h-3" />
+                    Wallet Connected
+                  </span>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowWalletConnect(true)}
+                    className="text-xs border-orange-200 text-orange-700 hover:bg-orange-50"
+                  >
+                    <Wallet className="w-3 h-3 mr-1" />
+                    Connect Wallet
+                  </Button>
+                )}
+              </div>
             </div>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleLogout}
+              className="border-red-200 text-red-700 hover:bg-red-50"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </header>
@@ -128,129 +305,44 @@ export default function HomePage() {
           <p className="text-green-600 text-sm mt-1">{t.home.earnCardanoRewards}</p>
         </div>
 
-        <Card className="mt-8 border-green-200 bg-green-50">
-          <CardHeader>
-            <CardTitle className="text-green-800 text-center">{t.home.availableInZugdidi}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="text-center">
-                <h3 className="font-semibold text-green-700 mb-1">{t.locations.kikalisviliBin}</h3>
-                <p className="text-sm text-green-600">{t.locations.kikalisviliAddress}</p>
+        <div className="grid gap-6 md:grid-cols-2 mt-8">
+          <Card className="border-green-200 bg-green-50">
+            <CardHeader>
+              <CardTitle className="text-green-800 text-center">{t.home.availableInZugdidi}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                <div className="text-center">
+                  <h3 className="font-semibold text-green-700 mb-1">{t.locations.kikalisviliBin}</h3>
+                  <p className="text-sm text-green-600">{t.locations.kikalisviliAddress}</p>
+                </div>
+                <div className="text-center">
+                  <h3 className="font-semibold text-green-700 mb-1">{t.locations.tradeCenterMall}</h3>
+                  <p className="text-sm text-green-600">{t.locations.tradeCenterAddress}</p>
+                </div>
               </div>
-              <div className="text-center">
-                <h3 className="font-semibold text-green-700 mb-1">{t.locations.tradeCenterMall}</h3>
-                <p className="text-sm text-green-600">{t.locations.tradeCenterAddress}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-blue-800 text-center">Safety Guidelines</CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-blue-600 text-sm mb-4">
+                Learn about e-waste risk levels and proper disposal methods
+              </p>
+              <Link href="/guidelines">
+                <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-100">
+                  View Guidelines
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   )
 }
 
-function AuthScreen({ onAuth }: { onAuth: (user: { userId: string; email: string; cardanoAddress: string }) => void }) {
-  const [email, setEmail] = useState("")
-  const [name, setName] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const { t } = useTranslation()
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
-
-    try {
-      // Generate userId from email and name
-      const userId = `${name.toLowerCase().replace(/\s+/g, "_")}_${Date.now()}`
-
-      const response = await fetch("/api/users/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userId,
-          email,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        onAuth({
-          userId: data.user.userId,
-          email: data.user.email,
-          cardanoAddress: data.user.cardanoAddress,
-        })
-      } else {
-        setError(data.error || t.auth.registrationFailed)
-      }
-    } catch (err) {
-      setError(t.auth.networkError)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-green-200">
-        <CardHeader className="text-center">
-          <div className="absolute top-4 right-4">
-            <LanguageSwitcher />
-          </div>
-          <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Recycle className="w-8 h-8 text-white" />
-          </div>
-          <CardTitle className="text-2xl text-green-800">{t.auth.welcome}</CardTitle>
-          <CardDescription>{t.auth.welcomeDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-green-700">
-                {t.auth.fullName}
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder={t.auth.enterFullName}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="border-green-200 focus:border-green-500"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-green-700">
-                {t.auth.emailAddress}
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={t.auth.enterEmail}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="border-green-200 focus:border-green-500"
-              />
-            </div>
-            {error && (
-              <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
-            )}
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
-              {isLoading ? t.auth.creatingAccount : t.auth.createAccount}
-            </Button>
-          </form>
-          <div className="mt-6 text-center text-sm text-green-600">
-            <p>{t.auth.walletInfo}</p>
-            <p className="mt-1">{t.auth.earnInfo}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}

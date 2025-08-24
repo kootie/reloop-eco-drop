@@ -5,7 +5,13 @@ import { useTranslation } from "@/hooks/use-translation"
 import { Languages } from "lucide-react"
 
 export default function LanguageSwitcher() {
-  const { language, setLanguage } = useTranslation()
+  const { language, setLanguage, isHydrated } = useTranslation()
+
+  if (!isHydrated) {
+    return (
+      <div className="w-16 h-8 bg-gray-200 rounded animate-pulse"></div>
+    )
+  }
 
   const toggleLanguage = () => {
     setLanguage(language === "en" ? "ka" : "en")

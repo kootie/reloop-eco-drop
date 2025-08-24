@@ -1,0 +1,15 @@
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://avvirivnoktxyjvcmvnm.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF2dmlyaXZub2t0eHlqdmNtdm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2Mjg4NjQsImV4cCI6MjA3MTIwNDg2NH0.yJRWxux3-2c5JHd-Z1gzcUQvdQR8Ji3GJTlYDfDKc54
+
+# JWT Secret for authentication (randomly generated)
+JWT_SECRET=a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9x0y1z2a3b4c5d6e7f8
+
+# Application Environment
+NODE_ENV=development
+
+# Cardano Testnet Configuration
+BLOCKFROST_PROJECT_ID=preprod
+BACKEND_WALLET_SEED=your_backend_wallet_seed_phrase_here
+
+

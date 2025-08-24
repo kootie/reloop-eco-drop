@@ -41,7 +41,15 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const { t } = useTranslation()
+  const { t, isHydrated } = useTranslation()
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     loadDeviceTypes()
