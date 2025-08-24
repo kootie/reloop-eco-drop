@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get real bins data from Supabase database
     const { data: bins, error } = await supabase
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Convert numeric fields for database
-    const dbUpdateData: any = {}
+    const dbUpdateData: Record<string, string | number> = {}
     if (updateData.location_name) dbUpdateData.location_name = updateData.location_name
     if (updateData.address) dbUpdateData.address = updateData.address
     if (updateData.latitude) dbUpdateData.latitude = parseFloat(updateData.latitude)

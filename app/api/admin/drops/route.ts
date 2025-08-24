@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
-import { adaPaymentService } from '@/lib/ada-payment-service'
 
 // Get all drops for admin review
 export async function GET(request: NextRequest) {
