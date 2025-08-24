@@ -22,7 +22,8 @@ import {
   AlertCircle,
   Filter,
   BarChart3,
-  Users
+  Users,
+  Coins
 } from "lucide-react"
 
 interface Admin {
