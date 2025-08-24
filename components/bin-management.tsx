@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { 
-  MapPin, 
   Plus, 
   Edit, 
   Trash2, 
@@ -17,7 +16,6 @@ import {
   RefreshCw,
   Activity,
   AlertTriangle,
-  CheckCircle,
   Users,
   Package
 } from "lucide-react"

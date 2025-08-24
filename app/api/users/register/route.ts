@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Lucid, Blockfrost, generateSeedPhrase } from 'lucid-cardano'
+import { generateSeedPhrase } from 'lucid-cardano'
 
 export async function POST(request: NextRequest) {
   try {

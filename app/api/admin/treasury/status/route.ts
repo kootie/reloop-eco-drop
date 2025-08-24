@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { treasuryService } from '@/lib/treasury-service'
 
 // Get treasury status and statistics
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const treasuryStats = await treasuryService.getTreasuryStats()
     

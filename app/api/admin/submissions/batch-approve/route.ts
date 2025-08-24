@@ -11,12 +11,7 @@ interface AuthToken {
   role: string
 }
 
-interface SubmissionApproval {
-  dropId: string
-  userId: string
-  actualRewardAda: number
-  actualWeightKg: number
-}
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,12 +37,12 @@ export async function POST(request: NextRequest) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET) as AuthToken
         userId = decoded.userId
-      } catch (err) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid or expired token' },
-          { status: 401 }
-        )
-      }
+             } catch {
+         return NextResponse.json(
+           { success: false, error: 'Invalid or expired token' },
+           { status: 401 }
+         )
+       }
     }
 
     const body = await request.json()
@@ -72,11 +67,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const processedSubmissions = []
+    const processedSubmissions: string[] = []
     const processedUsers = new Set<string>()
     let totalAda = 0
-    const errors = []
-    const paymentResults = []
+    const errors: string[] = []
+    const paymentResults: Array<{
+      type: string
+      txHash: string
+      totalAmount: number
+      recipientCount: number
+    }> = []
 
     // Get user Cardano addresses for all submissions
     const userIds = [...new Set(submissions.map(s => s.userId))]

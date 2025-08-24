@@ -1,15 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { 
   CheckCircle2, 
-  XCircle, 
   Eye,
   User,
   Wallet,
@@ -19,7 +18,6 @@ import {
   CheckSquare,
   Square,
   Loader2,
-  Send,
   Users
 } from "lucide-react"
 
@@ -64,9 +62,9 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
 
   useEffect(() => {
     loadPendingSubmissions()
-  }, [filter])
+  }, [loadPendingSubmissions])
 
-  const loadPendingSubmissions = async () => {
+  const loadPendingSubmissions = useCallback(async () => {
     setIsLoading(true)
     try {
       const url = filter === 'all' 
@@ -91,7 +89,7 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [filter, admin.token])
 
   const toggleSubmissionSelection = (submissionId: string) => {
     const newSelection = new Set(selectedSubmissions)
@@ -444,6 +442,7 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                   src={selectedSubmission.photo}
                   alt="E-waste submission"
                   className="w-full max-w-md mx-auto rounded-lg border border-gray-200"
+                  loading="lazy"
                 />
               </div>
 

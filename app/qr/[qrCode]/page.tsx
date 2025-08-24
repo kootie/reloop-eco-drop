@@ -2,13 +2,16 @@
 
 import QRBinInfo from '@/components/qr-bin-info'
 import { useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-export default function QRPage({ params }: { params: { qrCode: string } }) {
+export default function QRPage({ params }: { params: Promise<{ qrCode: string }> }) {
 	const search = useSearchParams()
-	const qrCode = params.qrCode
-	const lat = search.get('lat')
-	const lng = search.get('lng')
+	const [qrCode, setQrCode] = useState<string>('')
 	const name = search.get('name')
+
+	useEffect(() => {
+		params.then(p => setQrCode(p.qrCode))
+	}, [params])
 
 	// We simply render the info component; it fetches details via API by qrCode
 	return (

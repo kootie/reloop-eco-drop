@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -72,11 +72,7 @@ export default function AdminDashboard({ admin, onLogout }: AdminDashboardProps)
   const [reviewNotes, setReviewNotes] = useState<string>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useEffect(() => {
-    loadDrops()
-  }, [statusFilter])
-
-  const loadDrops = async () => {
+  const loadDrops = useCallback(async () => {
     setIsLoading(true)
     try {
       const url = statusFilter === 'all' 
@@ -94,7 +90,11 @@ export default function AdminDashboard({ admin, onLogout }: AdminDashboardProps)
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [statusFilter])
+
+  useEffect(() => {
+    loadDrops()
+  }, [loadDrops])
 
   const handleDropReview = async (dropId: string, action: 'approve' | 'reject') => {
     if (action === 'approve' && (!reviewTokens || parseFloat(reviewTokens) < 0)) {
@@ -131,7 +131,7 @@ export default function AdminDashboard({ admin, onLogout }: AdminDashboardProps)
       } else {
         alert(data.error || `Failed to ${action} drop`)
       }
-    } catch (error) {
+    } catch {
       alert('Network error. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -482,6 +482,7 @@ export default function AdminDashboard({ admin, onLogout }: AdminDashboardProps)
                       src={selectedDrop.photo}
                       alt="E-waste item"
                       className="w-full max-w-md mx-auto rounded-lg border border-gray-200"
+                      loading="lazy"
                     />
                   )
                 ) : (

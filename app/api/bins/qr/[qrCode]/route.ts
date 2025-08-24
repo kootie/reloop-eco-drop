@@ -3,14 +3,14 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(
 	request: NextRequest,
-	{ params }: { params: { qrCode: string } }
+	{ params }: { params: Promise<{ qrCode: string }> }
 ) {
 	try {
-		const { qrCode } = params
+		const { qrCode } = await params
 		const normalized = decodeURIComponent(qrCode || '').trim()
 		console.log('[QR API] Received qrCode:', qrCode, 'Normalized:', normalized)
 
-		let { data: bin, error } = await supabase
+		const { data: bin, error } = await supabase
 			.from('bins')
 			.select('*')
 			.or(`qr_code.eq.${normalized},bin_id.eq.${normalized}`)

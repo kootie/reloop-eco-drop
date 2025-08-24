@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     let decoded: AuthToken
     try {
       decoded = jwt.verify(token, JWT_SECRET) as AuthToken
-    } catch (err) {
+    } catch {
       return NextResponse.json(
         { success: false, error: 'Invalid or expired token' },
         { status: 401 }
