@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
     } else {
       // Try to verify as JWT token for regular users
       try {
-        const decoded = jwt.verify(token, JWT_SECRET) as AuthToken
+        jwt.verify(token, JWT_SECRET) as AuthToken
         // For now, we'll allow any valid JWT token to access admin functions
         // In production, check for admin role
-      } catch (err) {
+      } catch {
         return NextResponse.json(
           { success: false, error: 'Invalid or expired token' },
           { status: 401 }
@@ -70,13 +70,13 @@ export async function GET(request: NextRequest) {
       throw error
     }
 
-    const dropsWithWallet = (result || []).filter((row: any) => row.users?.cardano_address)
-    const dropsWithoutWallet = (result || []).filter((row: any) => !row.users?.cardano_address)
+    const dropsWithWallet = (result || []).filter((row: { users?: { cardano_address: string | null } }) => row.users?.cardano_address)
+    const dropsWithoutWallet = (result || []).filter((row: { users?: { cardano_address: string | null } }) => !row.users?.cardano_address)
 
     // Notify users without wallets to connect before submissions
     try {
       if (dropsWithoutWallet.length > 0) {
-        const notifications = dropsWithoutWallet.map((row: any) => ({
+        const notifications = dropsWithoutWallet.map((row: { user_id: string; drop_id: string }) => ({
           user_id: row.user_id,
           type: 'wallet_required',
           title: 'Connect Wallet Required',
@@ -92,7 +92,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform only drops with wallets for frontend
-    const submissions = dropsWithWallet.map((row: any) => ({
+    const submissions = dropsWithWallet.map((row: {
+      id: string
+      drop_id: string
+      user_id: string
+      device_type_id: string
+      estimated_reward_ada: string | number
+      actual_weight_kg: string | number | null
+      photo_url: string | null
+      created_at: string
+      bin_id: string
+      user_latitude: string | number
+      user_longitude: string | number
+      distance_to_bin_meters: string | number
+      users?: {
+        email: string
+        full_name: string
+        cardano_address: string | null
+        is_verified: boolean
+      }
+    }) => ({
       id: row.id,
       dropId: row.drop_id,
       userId: row.user_id,

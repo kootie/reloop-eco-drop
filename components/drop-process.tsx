@@ -36,22 +36,24 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [deviceTypes, setDeviceTypes] = useState<any>(null)
+  const [deviceTypes, setDeviceTypes] = useState<{
+    success: boolean
+    devices?: Array<{
+      id: string
+      device_name: string
+      category: string
+      reward_ada: number
+    }>
+  } | null>(null)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const { t, isHydrated } = useTranslation()
 
-  if (!isHydrated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
-      </div>
-    )
-  }
-
   useEffect(() => {
+    if (!isHydrated) return
+    
     loadDeviceTypes()
     getCurrentUserLocation()
 
@@ -60,7 +62,15 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
         streamRef.current.getTracks().forEach((track) => track.stop())
       }
     }
-  }, [])
+  }, [isHydrated])
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
 
   const loadDeviceTypes = async () => {
     try {
@@ -101,20 +111,7 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
 
   const getCurrentStepIndex = () => steps.findIndex((step) => step.id === currentStep)
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" }, // Use back camera if available
-      })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
-    } catch (error) {
-      console.error("Error accessing camera:", error)
-      setError("Unable to access camera. Please check permissions.")
-    }
-  }
+
 
   const stopCamera = () => {
     if (streamRef.current) {
@@ -123,41 +120,7 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
     }
   }
 
-  const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const canvas = canvasRef.current
-      const video = videoRef.current
-      const context = canvas.getContext("2d")
 
-      if (context) {
-        canvas.width = video.videoWidth
-        canvas.height = video.videoHeight
-        context.drawImage(video, 0, 0)
-
-        const photoDataUrl = canvas.toDataURL("image/jpeg", 0.8)
-        setCapturedPhoto(photoDataUrl)
-        stopCamera()
-        setCurrentStep("select-item")
-      }
-    }
-  }
-
-  const simulateQRScan = () => {
-    // Simulate QR code scanning - in real app this would use a QR scanner library
-    setIsLoading(true)
-    setTimeout(() => {
-      if (selectedBin) {
-        setScannedQR(selectedBin.qrCode)
-        setCurrentStep("take-photo")
-      }
-      setIsLoading(false)
-    }, 2000)
-  }
-
-  const handleItemSelection = (itemType: string) => {
-    setSelectedItem(itemType)
-    setCurrentStep("confirm")
-  }
 
   const submitDrop = async () => {
     if (!selectedBin || !capturedPhoto || !selectedItem || !userLocation) {

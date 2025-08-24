@@ -10,9 +10,7 @@ import {
   Wallet, 
   Coins, 
   TrendingUp, 
-  AlertCircle, 
-  CheckCircle2, 
-  ExternalLink,
+  CheckCircle2,
   RefreshCw,
   Shield
 } from 'lucide-react'
@@ -22,7 +20,7 @@ declare global {
   interface Window {
     cardano?: {
       eternl?: {
-        enable(): Promise<any>
+        enable(): Promise<{ address: string; networkId: number }>
         isEnabled(): Promise<boolean>
         getBalance(): Promise<string>
         getUsedAddresses(): Promise<string[]>
@@ -30,10 +28,10 @@ declare global {
         getNetworkId(): Promise<number>
         signTx(tx: string): Promise<string>
         submitTx(tx: string): Promise<string>
-        getUtxos(): Promise<any[]>
+        getUtxos(): Promise<Array<{ address: string; amount: string; assets: Record<string, string> }>>
       }
       nami?: {
-        enable(): Promise<any>
+        enable(): Promise<{ address: string; networkId: number }>
         isEnabled(): Promise<boolean>
         getBalance(): Promise<string>
         getUsedAddresses(): Promise<string[]>
@@ -41,10 +39,10 @@ declare global {
         getNetworkId(): Promise<number>
         signTx(tx: string): Promise<string>
         submitTx(tx: string): Promise<string>
-        getUtxos(): Promise<any[]>
+        getUtxos(): Promise<Array<{ address: string; amount: string; assets: Record<string, string> }>>
       }
       lace?: {
-        enable(): Promise<any>
+        enable(): Promise<{ address: string; networkId: number }>
         isEnabled(): Promise<boolean>
         getBalance(): Promise<string>
         getUsedAddresses(): Promise<string[]>
@@ -52,7 +50,7 @@ declare global {
         getNetworkId(): Promise<number>
         signTx(tx: string): Promise<string>
         submitTx(tx: string): Promise<string>
-        getUtxos(): Promise<any[]>
+        getUtxos(): Promise<Array<{ address: string; amount: string; assets: Record<string, string> }>>
       }
     }
   }

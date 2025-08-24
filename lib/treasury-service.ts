@@ -1,4 +1,4 @@
-import { Lucid, Blockfrost, TxHash, PolicyId, AssetName } from 'lucid-cardano'
+import { Lucid, Blockfrost, PolicyId } from 'lucid-cardano'
 import { supabase } from './supabase'
 
 // Treasury Smart Contract Service for managing e-waste rewards
@@ -141,7 +141,7 @@ export class TreasuryService {
       // Build funding transaction
       const lovelaceAmount = Math.floor(amountADA * 1_000_000)
       
-      let tx = this.lucid
+      const tx = this.lucid
         .newTx()
         .payToAddress(this.treasuryAddress, { lovelace: BigInt(lovelaceAmount) })
         .attachMetadata(674, {
@@ -205,7 +205,7 @@ export class TreasuryService {
       // Build payout transaction
       const lovelaceAmount = Math.floor(amountADA * 1_000_000)
       
-      let tx = this.lucid
+      const tx = this.lucid
         .newTx()
         .payToAddress(recipientAddress, { lovelace: BigInt(lovelaceAmount) })
         .attachMetadata(674, {

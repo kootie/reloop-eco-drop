@@ -107,7 +107,7 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
 
   useEffect(() => {
     loadActiveBins()
-  }, [t]) // Re-load when language changes
+  }, []) // Load once on mount
 
   const loadActiveBins = async () => {
     setIsLoadingBins(true)
@@ -119,7 +119,21 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
 
       if (data.success && data.bins.length > 0) {
         setBins(
-          data.bins.map((bin: any) => ({
+          data.bins.map((bin: {
+            id: string
+            location_name?: string
+            name?: string
+            address?: string
+            latitude: number | string
+            longitude: number | string
+            qr_code?: string
+            qrCode?: string
+            is_active?: boolean
+            is_operational?: boolean
+            status?: string
+            total_drops?: number
+            totalDrops?: number
+          }) => ({
             id: bin.id,
             name: bin.location_name ?? bin.name ?? 'Recycling Bin',
             address: bin.address ?? '',

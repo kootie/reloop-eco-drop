@@ -78,7 +78,7 @@ export class DropService {
   // Update drop status
   static async updateDropStatus(dropId: string, status: string, adminUsername?: string, notes?: string) {
     try {
-      const updateData: any = {
+      const updateData: Record<string, string | number | undefined> = {
         status,
         updated_at: new Date().toISOString()
       }
@@ -229,8 +229,10 @@ export class UserService {
   }
 }
 
-export default {
+const DatabaseModule = {
   Database,
   DropService,
   UserService
 }
+
+export default DatabaseModule

@@ -299,7 +299,16 @@ export class DropService {
   }
 
   // Get pending drops for admin review
-  static async getPendingDrops(limit: number = 50): Promise<any[]> {
+  static async getPendingDrops(limit: number = 50): Promise<Array<{
+    drop_id: string
+    user_id: string
+    status: string
+    submitted_at: string
+    estimated_reward_ada: number
+    users: { email: string; full_name: string; cardano_address: string | null; is_verified: boolean }
+    device_types: { device_name: string; category: string }
+    bins: { location_name: string }
+  }>> {
     const { data, error } = await supabase
       .from('drops')
       .select(`
@@ -378,7 +387,12 @@ export class DropService {
   }
 
   // Get approved drops ready for payment
-  static async getApprovedDropsForPayment(limit: number = 100): Promise<any[]> {
+  static async getApprovedDropsForPayment(limit: number = 100): Promise<Array<{
+    drop_id: string
+    user_id: string
+    actual_reward_ada: number
+    users: { cardano_address: string; user_id: string }
+  }>> {
     const { data, error } = await supabase
       .from('drops')
       .select(`
