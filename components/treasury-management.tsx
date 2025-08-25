@@ -15,46 +15,7 @@ import {
   Shield
 } from 'lucide-react'
 
-// Extend Window type for multiple wallet providers
-declare global {
-  interface Window {
-    cardano?: {
-      eternl?: {
-        enable(): Promise<{ address: string; networkId: number }>
-        isEnabled(): Promise<boolean>
-        getBalance(): Promise<string>
-        getUsedAddresses(): Promise<string[]>
-        getUnusedAddresses(): Promise<string[]>
-        getNetworkId(): Promise<number>
-        signTx(tx: string): Promise<string>
-        submitTx(tx: string): Promise<string>
-        getUtxos(): Promise<Array<{ address: string; amount: string; assets: Record<string, string> }>>
-      }
-      nami?: {
-        enable(): Promise<{ address: string; networkId: number }>
-        isEnabled(): Promise<boolean>
-        getBalance(): Promise<string>
-        getUsedAddresses(): Promise<string[]>
-        getUnusedAddresses(): Promise<string[]>
-        getNetworkId(): Promise<number>
-        signTx(tx: string): Promise<string>
-        submitTx(tx: string): Promise<string>
-        getUtxos(): Promise<Array<{ address: string; amount: string; assets: Record<string, string> }>>
-      }
-      lace?: {
-        enable(): Promise<{ address: string; networkId: number }>
-        isEnabled(): Promise<boolean>
-        getBalance(): Promise<string>
-        getUsedAddresses(): Promise<string[]>
-        getUnusedAddresses(): Promise<string[]>
-        getNetworkId(): Promise<number>
-        signTx(tx: string): Promise<string>
-        submitTx(tx: string): Promise<string>
-        getUtxos(): Promise<Array<{ address: string; amount: string; assets: Record<string, string> }>>
-      }
-    }
-  }
-}
+// Wallet provider types (no global declaration needed here)
 
 interface TreasuryInfo {
   balance: number

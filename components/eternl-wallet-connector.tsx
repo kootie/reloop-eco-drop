@@ -111,7 +111,7 @@ export default function EternlWalletConnector({
       
       // Get network ID (0 = testnet, 1 = mainnet)
       const networkId = await api.getNetworkId()
-      const network = networkId === 0 ? 'testnet' : 'mainnet'
+      const network: 'testnet' | 'mainnet' = networkId === 0 ? 'testnet' : 'mainnet'
       
       // Get balance
       const balanceHex = await api.getBalance()

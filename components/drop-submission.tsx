@@ -20,7 +20,7 @@ interface BinLocation {
 interface User {
   userId: string
   email: string
-  cardanoAddress: string
+  cardanoAddress?: string
 }
 
 interface DropSubmissionProps {

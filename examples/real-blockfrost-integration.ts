@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         "https://cardano-testnet.blockfrost.io/api/v0", // Testnet URL
         process.env.BLOCKFROST_PROJECT_ID! // Your Blockfrost Project ID
       ),
-      "Testnet" // Use "Mainnet" for production
+      "Testnet" as const // Use "Mainnet" for production
     )
 
     // 2. Generate real seed phrase

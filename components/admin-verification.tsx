@@ -60,10 +60,6 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
   const [batchNotes, setBatchNotes] = useState("")
   const [filter, setFilter] = useState<'all' | 'verified-users' | 'unverified-users'>('all')
 
-  useEffect(() => {
-    loadPendingSubmissions()
-  }, [loadPendingSubmissions])
-
   const loadPendingSubmissions = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -90,6 +86,10 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
       setIsLoading(false)
     }
   }, [filter, admin.token])
+
+  useEffect(() => {
+    loadPendingSubmissions()
+  }, [loadPendingSubmissions])
 
   const toggleSubmissionSelection = (submissionId: string) => {
     const newSelection = new Set(selectedSubmissions)

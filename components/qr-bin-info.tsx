@@ -88,11 +88,6 @@ export default function QRBinInfo({ qrCode, onStartDrop }: QRBinInfoProps) {
   const [error, setError] = useState<string | null>(null)
   const [isMounted, setIsMounted] = useState(false)
 
-  useEffect(() => {
-    setIsMounted(true)
-    fetchBinInfo()
-  }, [qrCode, fetchBinInfo])
-
   const fetchBinInfo = useCallback(async () => {
     try {
       setLoading(true)
@@ -112,6 +107,11 @@ export default function QRBinInfo({ qrCode, onStartDrop }: QRBinInfoProps) {
       setLoading(false)
     }
   }, [qrCode])
+
+  useEffect(() => {
+    setIsMounted(true)
+    fetchBinInfo()
+  }, [qrCode, fetchBinInfo])
 
   if (!isMounted || loading) {
     return (
@@ -270,7 +270,7 @@ export default function QRBinInfo({ qrCode, onStartDrop }: QRBinInfoProps) {
                     
                     <div className="mt-3">
                       <h4 className="font-medium text-gray-700 mb-1">Disposal Requirements:</h4>
-                      <p className="text-sm text-gray-600">{level.disposal || level.requirements}</p>
+                      <p className="text-sm text-gray-600">{level.disposal}</p>
                     </div>
                   </div>
                 )

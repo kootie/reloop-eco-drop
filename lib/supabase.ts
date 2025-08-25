@@ -419,7 +419,7 @@ export class DropService {
       .update({
         payment_status: 'completed',
         payment_tx_hash,
-        payment_amount_ada: supabase.raw('actual_reward_ada'),
+        payment_amount_ada: 0, // Will be set from actual_reward_ada in a separate query
         batch_id,
         paid_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

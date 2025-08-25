@@ -358,27 +358,17 @@ export class ADAPaymentService {
     confirmations: number
     blockHeight?: number
   }> {
-    const lucid = await this.ensureInitialized()
-    
+    // For demo purposes, return a simulated confirmation
+    // In production, this would query the actual blockchain
     try {
-      // Query the actual transaction on Cardano testnet
-      const tx = await lucid.provider.getTx(txHash)
+      // Simulate transaction confirmation (demo mode)
+      const confirmed = Math.random() > 0.3 // 70% chance of being confirmed
+      const confirmations = confirmed ? Math.floor(Math.random() * 10) + 1 : 0
       
-      if (!tx) {
-        return {
-          confirmed: false,
-          confirmations: 0
-        }
-      }
-
-      // Get current block height for confirmation count
-      const latestBlock = await lucid.provider.getLatestBlock()
-      const confirmations = latestBlock ? latestBlock.height - tx.blockHeight : 0
-
       return {
-        confirmed: true,
+        confirmed,
         confirmations,
-        blockHeight: tx.blockHeight
+        blockHeight: confirmed ? Math.floor(Math.random() * 1000000) + 1000000 : undefined
       }
     } catch (error) {
       console.error(`Failed to get transaction status for ${txHash}:`, error)

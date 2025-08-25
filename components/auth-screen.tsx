@@ -170,7 +170,7 @@ export default function AuthScreen({ onAuth }: AuthScreenProps) {
             <Recycle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-green-800 mb-2">
-            {t?.app?.title || "Reloop Live"}
+            {t?.app?.name || "Reloop Live"}
           </h1>
           <p className="text-green-600">
             {isLoginMode 
