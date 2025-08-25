@@ -6,12 +6,10 @@ type Database = {
     Tables: {
       users: {
         Row: User;
-        Insert: Omit<User, 'id' | 'created_at' | 'updated_at'> & {
+        Insert: Omit<User, 'id'> & {
           id?: string;
-          created_at?: string;
-          updated_at?: string;
         };
-        Update: Partial<Omit<User, 'id' | 'created_at' | 'updated_at'>> & {
+        Update: Partial<Omit<User, 'id' | 'created_at'>> & {
           updated_at?: string;
         };
       };
@@ -174,6 +172,8 @@ export class UserService {
     network?: string;
   }): Promise<User> {
     const supabase = getSupabaseClient();
+    const now = new Date().toISOString();
+    
     const { data, error } = await supabase
       .from("users")
       .insert([
@@ -185,6 +185,16 @@ export class UserService {
           cardano_address: userData.cardano_address,
           wallet_type: userData.wallet_type || "eternl",
           network: userData.network || "testnet",
+          current_balance_ada: 0,
+          total_earned_ada: 0,
+          pending_rewards_ada: 0,
+          total_drops: 0,
+          successful_drops: 0,
+          rejected_drops: 0,
+          is_active: true,
+          is_verified: false,
+          created_at: now,
+          updated_at: now,
         },
       ])
       .select()
