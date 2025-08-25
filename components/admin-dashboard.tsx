@@ -30,6 +30,7 @@ import {
   BarChart3,
   Users,
   Coins,
+  QrCode,
 } from "lucide-react";
 
 interface Admin {
@@ -73,7 +74,7 @@ export default function AdminDashboard({
   onLogout,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<
-    "verification" | "drops" | "bins" | "treasury" | "stats"
+    "verification" | "drops" | "bins" | "treasury" | "stats" | "qr-codes"
   >("verification");
   const [drops, setDrops] = useState<Drop[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("pending");
@@ -298,6 +299,18 @@ export default function AdminDashboard({
           >
             <BarChart3 className="w-4 h-4 mr-2" />
             Statistics
+          </Button>
+          <Button
+            variant={activeTab === "qr-codes" ? "default" : "outline"}
+            onClick={() => setActiveTab("qr-codes")}
+            className={
+              activeTab === "qr-codes"
+                ? "bg-blue-600"
+                : "border-blue-200 text-blue-700"
+            }
+          >
+            <QrCode className="w-4 h-4 mr-2" />
+            QR Codes
           </Button>
         </div>
 
@@ -534,6 +547,39 @@ export default function AdminDashboard({
               </p>
             </CardContent>
           </Card>
+        )}
+
+        {activeTab === "qr-codes" && (
+          <div className="space-y-6">
+            <Card className="border-green-200">
+              <CardHeader>
+                <CardTitle className="text-green-800">
+                  QR Code Generator
+                </CardTitle>
+                <CardDescription>
+                  Generate and download QR codes for your recycling bins
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <QrCode className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    QR Code Management
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    Create, manage, and download QR codes for all your bin locations
+                  </p>
+                  <Button
+                    onClick={() => window.open('/admin/qr-codes', '_blank')}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Open QR Code Generator
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
       </main>
 

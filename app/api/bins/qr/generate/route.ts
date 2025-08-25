@@ -18,7 +18,11 @@ export async function GET(request: NextRequest) {
       .single();
 
     // Build destination URL that the QR should open
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 
+                   process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                   request.headers.get('host') ? 
+                     `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}` :
+                     "http://localhost:3000";
     const url = new URL(`${baseUrl}/qr/${encodeURIComponent(qrCode)}`);
     if (bin?.latitude && bin?.longitude) {
       url.searchParams.set("lat", String(bin.latitude));
