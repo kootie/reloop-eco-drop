@@ -169,7 +169,7 @@ export default function PublicQRCodesPage() {
                 📱 How to Use QR Codes
               </h3>
               <div className="text-sm text-blue-700 space-y-1">
-                <p>1. Click "View QR Code" to see the QR code image</p>
+                <p>1. Click &quot;View QR Code&quot; to see the QR code image</p>
                 <p>2. Right-click and save the image for printing</p>
                 <p>3. Print and attach to your bin location</p>
                 <p>4. Users can scan with any QR code reader app</p>
