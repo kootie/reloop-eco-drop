@@ -70,9 +70,9 @@ export default function QRCodeGenerator() {
   };
 
   const generateQRCode = (qrCode: string) => {
-    // Use custom domain for QR code generation
+    // Use public API for QR code generation (no authentication required)
     const baseUrl = "https://reloop-eco-drop.vercel.app";
-    return `${baseUrl}/api/bins/qr/generate?qrCode=${encodeURIComponent(qrCode)}`;
+    return `${baseUrl}/api/public/qr/${encodeURIComponent(qrCode)}`;
   };
 
   const getPublicBinUrl = (qrCode: string) => {

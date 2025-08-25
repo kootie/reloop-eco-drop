@@ -40,7 +40,7 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 // Download function
 function downloadQRCode(qrCode, filename) {
   return new Promise((resolve, reject) => {
-    const url = `${BASE_URL}/api/bins/qr/generate?qrCode=${encodeURIComponent(qrCode)}`;
+    const url = `${BASE_URL}/api/public/qr/${encodeURIComponent(qrCode)}`;
     const protocol = BASE_URL.startsWith('https') ? https : http;
     
     console.log(`Downloading: ${qrCode}...`);
@@ -178,10 +178,10 @@ function generateHTMLPage() {
                  <div class="qr-card">
                      <div class="bin-name">${bin.name}</div>
                      <div class="bin-location">${bin.location}</div>
-                     <div class="qr-code">
-                         <img src="/api/bins/qr/generate?qrCode=${encodeURIComponent(bin.code)}" 
-                              alt="QR Code for ${bin.name}" />
-                     </div>
+                                           <div class="qr-code">
+                          <img src="/api/public/qr/${encodeURIComponent(bin.code)}" 
+                               alt="QR Code for ${bin.name}" />
+                      </div>
                      <div class="qr-url">
                          <small>${BASE_URL}/bin/${encodeURIComponent(bin.code)}</small>
                      </div>
