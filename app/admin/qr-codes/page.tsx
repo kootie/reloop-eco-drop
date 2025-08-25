@@ -12,13 +12,10 @@ import {
   Printer,
   QrCode,
   MapPin,
-  Building,
   Phone,
-  Clock,
   Package,
   RefreshCw,
   Plus,
-  Trash2,
 } from "lucide-react";
 
 interface Bin {
