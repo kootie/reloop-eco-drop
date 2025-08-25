@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,6 @@ import { Progress } from "@/components/ui/progress";
 import {
   MapPin,
   Phone,
-  Clock,
   Package,
   Recycle,
   TrendingUp,
@@ -137,12 +136,7 @@ export default function PublicBinPage({ params }: { params: { qrCode: string } }
 
   const qrCode = decodeURIComponent(params.qrCode);
 
-  useEffect(() => {
-    setIsMounted(true);
-    fetchBinInfo();
-  }, [qrCode]);
-
-  const fetchBinInfo = async () => {
+  const fetchBinInfo = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -155,12 +149,17 @@ export default function PublicBinPage({ params }: { params: { qrCode: string } }
       } else {
         setError(data.error || "Bin not found");
       }
-    } catch (err) {
+    } catch (error) {
       setError("Failed to load bin information");
     } finally {
       setLoading(false);
     }
-  };
+  }, [qrCode]);
+
+  useEffect(() => {
+    setIsMounted(true);
+    fetchBinInfo();
+  }, [fetchBinInfo]);
 
   const openInMaps = () => {
     if (binInfo) {
