@@ -65,13 +65,19 @@ export default function EternlWalletConnector({
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isEternlAvailable, setIsEternlAvailable] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Check if Eternl is installed
   useEffect(() => {
     const checkEternlAvailability = () => {
-      if (typeof window !== "undefined" && window.cardano?.eternl) {
-        setIsEternlAvailable(true);
-      } else {
+      try {
+        if (typeof window !== "undefined" && window.cardano?.eternl) {
+          setIsEternlAvailable(true);
+        } else {
+          setIsEternlAvailable(false);
+        }
+      } catch (error) {
+        console.warn("Eternl wallet check failed:", error);
         setIsEternlAvailable(false);
       }
     };
@@ -83,6 +89,16 @@ export default function EternlWalletConnector({
     return () => clearTimeout(timer);
   }, []);
 
+  // Handle retry attempts
+  useEffect(() => {
+    if (retryCount > 0 && retryCount <= 3) {
+      const timer = setTimeout(() => {
+        connectWallet();
+      }, 1000 * retryCount); // Exponential backoff
+      return () => clearTimeout(timer);
+    }
+  }, [retryCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const connectWallet = async () => {
     if (!window.cardano?.eternl) {
       setError("Eternl wallet not found. Please install Eternl extension.");
@@ -93,8 +109,16 @@ export default function EternlWalletConnector({
     setError(null);
 
     try {
-      // Enable the wallet
-      const api = await window.cardano.eternl.enable();
+      // Add a small delay to allow Eternl extension to fully initialize
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Enable the wallet with timeout
+      const enablePromise = window.cardano.eternl.enable();
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('Wallet connection timeout')), 10000)
+      );
+      
+      const api = await Promise.race([enablePromise, timeoutPromise]) as Awaited<ReturnType<typeof window.cardano.eternl.enable>>;
 
       // Get wallet addresses
       const usedAddresses = await api.getUsedAddresses();
@@ -140,11 +164,19 @@ export default function EternlWalletConnector({
       console.log("Eternl wallet connected:", walletData);
     } catch (err) {
       console.error("Failed to connect wallet:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to connect to Eternl wallet",
-      );
+      
+      // Handle specific Eternl extension errors
+      if (err instanceof Error) {
+        if (err.message.includes('domId') || err.message.includes('no data')) {
+          setError("Eternl extension error. Please try refreshing the page or restarting the extension.");
+        } else if (err.message.includes('timeout')) {
+          setError("Connection timeout. Please check if Eternl extension is unlocked.");
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError("Failed to connect to Eternl wallet");
+      }
     } finally {
       setIsConnecting(false);
     }
@@ -250,6 +282,31 @@ export default function EternlWalletConnector({
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
             <p className="text-sm text-red-600">{error}</p>
+            <div className="mt-2 flex gap-2">
+              <Button
+                onClick={() => {
+                  setError(null);
+                  setRetryCount(prev => prev + 1);
+                  connectWallet();
+                }}
+                size="sm"
+                variant="outline"
+                className="text-xs"
+              >
+                Retry
+              </Button>
+              <Button
+                onClick={() => {
+                  setError(null);
+                  window.location.reload();
+                }}
+                size="sm"
+                variant="outline"
+                className="text-xs"
+              >
+                Refresh Page
+              </Button>
+            </div>
           </div>
         )}
 
