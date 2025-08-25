@@ -128,13 +128,21 @@ const getAcceptedItems = (level: string) => {
   }
 };
 
-export default function PublicBinPage({ params }: { params: { qrCode: string } }) {
+export default function PublicBinPage({ params }: { params: Promise<{ qrCode: string }> }) {
   const [binInfo, setBinInfo] = useState<BinInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+  const [qrCode, setQrCode] = useState<string>("");
 
-  const qrCode = decodeURIComponent(params.qrCode);
+  useEffect(() => {
+    const resolveParams = async () => {
+      const resolvedParams = await params;
+      const decodedQrCode = decodeURIComponent(resolvedParams.qrCode);
+      setQrCode(decodedQrCode);
+    };
+    resolveParams();
+  }, [params]);
 
   const fetchBinInfo = useCallback(async () => {
     try {
@@ -149,7 +157,7 @@ export default function PublicBinPage({ params }: { params: { qrCode: string } }
       } else {
         setError(data.error || "Bin not found");
       }
-    } catch (error) {
+    } catch {
       setError("Failed to load bin information");
     } finally {
       setLoading(false);
@@ -158,8 +166,10 @@ export default function PublicBinPage({ params }: { params: { qrCode: string } }
 
   useEffect(() => {
     setIsMounted(true);
-    fetchBinInfo();
-  }, [fetchBinInfo]);
+    if (qrCode) {
+      fetchBinInfo();
+    }
+  }, [fetchBinInfo, qrCode]);
 
   const openInMaps = () => {
     if (binInfo) {
