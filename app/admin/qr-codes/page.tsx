@@ -16,6 +16,7 @@ import {
   Package,
   RefreshCw,
   Plus,
+  ExternalLink,
 } from "lucide-react";
 
 interface Bin {
@@ -72,6 +73,12 @@ export default function QRCodeGenerator() {
     // Use window.location.origin to get the current domain
     const baseUrl = window.location.origin;
     return `${baseUrl}/api/bins/qr/generate?qrCode=${encodeURIComponent(qrCode)}`;
+  };
+
+  const getPublicBinUrl = (qrCode: string) => {
+    // Use window.location.origin to get the current domain
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/bin/${encodeURIComponent(qrCode)}`;
   };
 
   const downloadQRCode = async (qrCode: string, filename: string) => {
@@ -223,10 +230,13 @@ export default function QRCodeGenerator() {
                 <div class="qr-card">
                     <div class="bin-name">${bin.location_name}</div>
                     <div class="bin-location">${bin.address}</div>
-                    <div class="qr-code">
-                        <img src="${generateQRCode(bin.qr_code)}" 
-                             alt="QR Code for ${bin.location_name}" />
-                    </div>
+                                         <div class="qr-code">
+                         <img src="${generateQRCode(bin.qr_code)}" 
+                              alt="QR Code for ${bin.location_name}" />
+                     </div>
+                     <div class="qr-url">
+                         <small>${getPublicBinUrl(bin.qr_code)}</small>
+                     </div>
                     <div class="qr-code-text">${bin.qr_code}</div>
                 </div>
             `).join('')}
@@ -436,17 +446,29 @@ export default function QRCodeGenerator() {
                     Download
                   </Button>
                   
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(generateQRCode(bin.qr_code), "_blank");
-                    }}
-                  >
-                    <QrCode className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
+                                     <Button
+                     size="sm"
+                     variant="outline"
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       window.open(generateQRCode(bin.qr_code), "_blank");
+                     }}
+                   >
+                     <QrCode className="w-4 h-4 mr-1" />
+                     QR Code
+                   </Button>
+                   
+                   <Button
+                     size="sm"
+                     variant="outline"
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       window.open(getPublicBinUrl(bin.qr_code), "_blank");
+                     }}
+                   >
+                     <ExternalLink className="w-4 h-4 mr-1" />
+                     Public Page
+                   </Button>
                 </div>
               </CardContent>
             </Card>

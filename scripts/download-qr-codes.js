@@ -174,18 +174,21 @@ function generateHTMLPage() {
             Scan these QR codes to access bin information and submit e-waste drops
         </p>
         
-        <div class="qr-grid">
-            ${QR_CODES.map(bin => `
-                <div class="qr-card">
-                    <div class="bin-name">${bin.name}</div>
-                    <div class="bin-location">${bin.location}</div>
-                    <div class="qr-code">
-                        <img src="/api/bins/qr/generate?qrCode=${encodeURIComponent(bin.code)}" 
-                             alt="QR Code for ${bin.name}" />
-                    </div>
-                    <div class="qr-code-text">${bin.code}</div>
-                </div>
-            `).join('')}
+                 <div class="qr-grid">
+             ${QR_CODES.map(bin => `
+                 <div class="qr-card">
+                     <div class="bin-name">${bin.name}</div>
+                     <div class="bin-location">${bin.location}</div>
+                     <div class="qr-code">
+                         <img src="/api/bins/qr/generate?qrCode=${encodeURIComponent(bin.code)}" 
+                              alt="QR Code for ${bin.name}" />
+                     </div>
+                     <div class="qr-url">
+                         <small>${BASE_URL}/bin/${encodeURIComponent(bin.code)}</small>
+                     </div>
+                     <div class="qr-code-text">${bin.code}</div>
+                 </div>
+             `).join('')}
         </div>
         
         <div style="text-align: center; margin-top: 40px; padding: 20px; background: #f8f9fa; border-radius: 5px;">

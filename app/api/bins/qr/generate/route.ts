@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
                    request.headers.get('host') ? 
                      `${request.headers.get('x-forwarded-proto') || 'https'}://${request.headers.get('host')}` :
                      "http://localhost:3000";
-    const url = new URL(`${baseUrl}/qr/${encodeURIComponent(qrCode)}`);
+    const url = new URL(`${baseUrl}/bin/${encodeURIComponent(qrCode)}`);
     if (bin?.latitude && bin?.longitude) {
       url.searchParams.set("lat", String(bin.latitude));
       url.searchParams.set("lng", String(bin.longitude));
