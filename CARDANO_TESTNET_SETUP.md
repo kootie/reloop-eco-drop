@@ -18,12 +18,14 @@ The Reloop application now uses real Cardano testnet transactions for ADA paymen
 ## Step 2: Create Backend Testnet Wallet
 
 ### Option A: Use Eternl Wallet
+
 1. Install Eternl wallet extension
 2. Create a new wallet for testnet
 3. Get testnet ADA from [Cardano Testnet Faucet](https://docs.cardano.org/cardano-testnet/tools/faucet/)
 4. Export your seed phrase (24 words)
 
 ### Option B: Use Cardano CLI
+
 ```bash
 # Generate a new wallet
 cardano-cli address key-gen --verification-key-file payment.vkey --signing-key-file payment.skey

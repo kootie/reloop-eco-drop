@@ -1,8 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { CheckCircle } from "lucide-react";
 
 export default function TodoManager() {
   const [tasks] = useState([
@@ -12,7 +18,7 @@ export default function TodoManager() {
     { id: 4, title: "Build Item Selection Interface", completed: true },
     { id: 5, title: "Add Translation System", completed: true },
     { id: 6, title: "Integrate Backend APIs", completed: true },
-  ])
+  ]);
 
   return (
     <Card className="border-green-200 bg-green-50">
@@ -21,19 +27,27 @@ export default function TodoManager() {
           <CheckCircle className="w-5 h-5" />
           Project Complete!
         </CardTitle>
-        <CardDescription>All Reloop frontend integration tasks have been completed successfully.</CardDescription>
+        <CardDescription>
+          All Reloop frontend integration tasks have been completed
+          successfully.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {tasks.map((task) => (
-            <div key={task.id} className="flex items-center gap-3 p-2 bg-white rounded-md">
+            <div
+              key={task.id}
+              className="flex items-center gap-3 p-2 bg-white rounded-md"
+            >
               <CheckCircle className="w-4 h-4 text-green-600" />
               <span className="text-green-800 text-sm">{task.title}</span>
             </div>
           ))}
         </div>
         <div className="mt-6 p-4 bg-white rounded-lg border border-green-200">
-          <h3 className="font-semibold text-green-800 mb-2">Integration Summary:</h3>
+          <h3 className="font-semibold text-green-800 mb-2">
+            Integration Summary:
+          </h3>
           <ul className="text-sm text-green-700 space-y-1">
             <li>✅ User authentication with Fireblocks wallet creation</li>
             <li>✅ Interactive map with Zugdidi bin locations</li>
@@ -45,5 +59,5 @@ export default function TodoManager() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

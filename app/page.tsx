@@ -1,162 +1,168 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { MapPin, Recycle, Wallet, LogOut } from "lucide-react"
-import MapView from "@/components/map-view"
-import DropProcess from "@/components/drop-process"
-import AuthScreen from "@/components/auth-screen"
-import EternlWalletConnector from "@/components/eternl-wallet-connector"
-import LanguageSwitcher from "@/components/language-switcher"
-import { useTranslation } from "@/hooks/use-translation"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { MapPin, Recycle, Wallet, LogOut } from "lucide-react";
+import MapView from "@/components/map-view";
+import DropProcess from "@/components/drop-process";
+import AuthScreen from "@/components/auth-screen";
+import EternlWalletConnector from "@/components/eternl-wallet-connector";
+import LanguageSwitcher from "@/components/language-switcher";
+import { useTranslation } from "@/hooks/use-translation";
+import Link from "next/link";
 
-type View = "home" | "map" | "drop"
+type View = "home" | "map" | "drop";
 
 interface BinLocation {
-  id: string
-  name: string
-  address: string
-  coordinates: { lat: number; lng: number }
-  qrCode: string
-  status: "active" | "inactive"
-  totalDrops: number
+  id: string;
+  name: string;
+  address: string;
+  coordinates: { lat: number; lng: number };
+  qrCode: string;
+  status: "active" | "inactive";
+  totalDrops: number;
 }
 
 interface User {
-  userId: string
-  email: string
-  fullName: string
-  cardanoAddress?: string
-  token: string
-  walletType?: string
-  network?: string
-  currentBalanceAda?: number
-  totalEarnedAda?: number
-  pendingRewardsAda?: number
-  totalDrops?: number
-  successfulDrops?: number
-  isVerified?: boolean
+  userId: string;
+  email: string;
+  fullName: string;
+  cardanoAddress?: string;
+  token: string;
+  walletType?: string;
+  network?: string;
+  currentBalanceAda?: number;
+  totalEarnedAda?: number;
+  pendingRewardsAda?: number;
+  totalDrops?: number;
+  successfulDrops?: number;
+  isVerified?: boolean;
 }
 
 export default function HomePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
-  const [currentView, setCurrentView] = useState<View>("home")
-  const [selectedBin, setSelectedBin] = useState<BinLocation | null>(null)
-  const [isMounted, setIsMounted] = useState(false)
-  const [showWalletConnect, setShowWalletConnect] = useState(false)
-  const { t, isHydrated } = useTranslation()
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [currentView, setCurrentView] = useState<View>("home");
+  const [selectedBin, setSelectedBin] = useState<BinLocation | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+  const [showWalletConnect, setShowWalletConnect] = useState(false);
+  const { t, isHydrated } = useTranslation();
 
   useEffect(() => {
     // Add a small delay to ensure DOM is completely ready and browser extensions have loaded
     const timer = setTimeout(() => {
-      setIsMounted(true)
+      setIsMounted(true);
       // Check for stored authentication
-      checkStoredAuth()
-    }, 100)
-    
-    return () => clearTimeout(timer)
-  }, [])
+      checkStoredAuth();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const checkStoredAuth = () => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken')
-      const userData = localStorage.getItem('userData')
-      
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken");
+      const userData = localStorage.getItem("userData");
+
       if (token && userData) {
         try {
-          const parsedUserData = JSON.parse(userData)
-          setUser({ ...parsedUserData, token })
-          setIsAuthenticated(true)
+          const parsedUserData = JSON.parse(userData);
+          setUser({ ...parsedUserData, token });
+          setIsAuthenticated(true);
         } catch (error) {
-          console.error('Error parsing stored user data:', error)
-          localStorage.removeItem('authToken')
-          localStorage.removeItem('userData')
+          console.error("Error parsing stored user data:", error);
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("userData");
         }
       }
     }
-  }
+  };
 
   const handleAuth = (userData: User) => {
-    setUser(userData)
-    setIsAuthenticated(true)
-    
+    setUser(userData);
+    setIsAuthenticated(true);
+
     // Store auth data
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('authToken', userData.token)
-      localStorage.setItem('userData', JSON.stringify(userData))
+    if (typeof window !== "undefined") {
+      localStorage.setItem("authToken", userData.token);
+      localStorage.setItem("userData", JSON.stringify(userData));
     }
-    
+
     // Show wallet connection if no wallet connected
     if (!userData.cardanoAddress) {
-      setShowWalletConnect(true)
+      setShowWalletConnect(true);
     }
-  }
+  };
 
   const handleWalletConnected = async (walletInfo: {
-    address: string
-    balance: number
-    network: 'testnet' | 'mainnet'
+    address: string;
+    balance: number;
+    network: "testnet" | "mainnet";
   }) => {
-    if (!user) return
+    if (!user) return;
 
     try {
-      const response = await fetch('/api/auth/wallet', {
-        method: 'POST',
+      const response = await fetch("/api/auth/wallet", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.token}`,
         },
         body: JSON.stringify({
           cardanoAddress: walletInfo.address,
-          walletType: 'eternl',
-          network: walletInfo.network
-        })
-      })
+          walletType: "eternl",
+          network: walletInfo.network,
+        }),
+      });
 
-      const data = await response.json()
-      
+      const data = await response.json();
+
       if (data.success) {
-        const updatedUser = { ...user, ...data.user }
-        setUser(updatedUser)
-        setShowWalletConnect(false)
-        
+        const updatedUser = { ...user, ...data.user };
+        setUser(updatedUser);
+        setShowWalletConnect(false);
+
         // Update stored user data
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('userData', JSON.stringify(updatedUser))
+        if (typeof window !== "undefined") {
+          localStorage.setItem("userData", JSON.stringify(updatedUser));
         }
       } else {
-        console.error('Failed to update wallet info:', data.error)
+        console.error("Failed to update wallet info:", data.error);
       }
     } catch (error) {
-      console.error('Error connecting wallet:', error)
+      console.error("Error connecting wallet:", error);
     }
-  }
+  };
 
   const handleLogout = () => {
-    setIsAuthenticated(false)
-    setUser(null)
-    setCurrentView("home")
-    setSelectedBin(null)
-    setShowWalletConnect(false)
-    
+    setIsAuthenticated(false);
+    setUser(null);
+    setCurrentView("home");
+    setSelectedBin(null);
+    setShowWalletConnect(false);
+
     // Clear stored auth data
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('userData')
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("userData");
     }
-  }
+  };
 
   if (!isMounted || !isHydrated) {
-    return null // Return null on server side to prevent hydration mismatch
+    return null; // Return null on server side to prevent hydration mismatch
   }
 
   if (!isAuthenticated) {
-    return <AuthScreen onAuth={handleAuth} />
+    return <AuthScreen onAuth={handleAuth} />;
   }
 
   // Show wallet connection modal if authenticated but no wallet connected
@@ -172,15 +178,16 @@ export default function HomePage() {
               Connect Your Wallet
             </h1>
             <p className="text-green-600 mb-6">
-              Connect your Cardano wallet to start earning ADA rewards for e-waste recycling
+              Connect your Cardano wallet to start earning ADA rewards for
+              e-waste recycling
             </p>
           </div>
-          
+
           <EternlWalletConnector
             onWalletConnected={handleWalletConnected}
             onWalletDisconnected={() => {}}
           />
-          
+
           <div className="text-center">
             <Button
               variant="outline"
@@ -192,7 +199,7 @@ export default function HomePage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (currentView === "map" && user) {
@@ -201,11 +208,11 @@ export default function HomePage() {
         user={user}
         onBack={() => setCurrentView("home")}
         onSelectBin={(bin) => {
-          setSelectedBin(bin)
-          setCurrentView("drop")
+          setSelectedBin(bin);
+          setCurrentView("drop");
         }}
       />
-    )
+    );
   }
 
   if (currentView === "drop" && user) {
@@ -215,11 +222,11 @@ export default function HomePage() {
         selectedBin={selectedBin}
         onBack={() => setCurrentView("map")}
         onComplete={() => {
-          setCurrentView("home")
-          setSelectedBin(null)
+          setCurrentView("home");
+          setSelectedBin(null);
         }}
       />
-    )
+    );
   }
 
   return (
@@ -238,7 +245,9 @@ export default function HomePage() {
           <div className="flex items-center gap-4">
             <LanguageSwitcher />
             <div className="text-right">
-              <p className="text-sm text-gray-600">{user?.fullName || user?.email}</p>
+              <p className="text-sm text-gray-600">
+                {user?.fullName || user?.email}
+              </p>
               <div className="flex items-center gap-2">
                 {user?.cardanoAddress ? (
                   <span className="text-xs text-green-600 flex items-center gap-1">
@@ -281,7 +290,10 @@ export default function HomePage() {
               <CardDescription>{t.home.findBinsDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setCurrentView("map")}>
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={() => setCurrentView("map")}
+              >
                 {t.home.viewMap}
               </Button>
             </CardContent>
@@ -289,11 +301,16 @@ export default function HomePage() {
 
           <Card className="border-green-200">
             <CardHeader>
-              <CardTitle className="text-green-800">{t.home.quickDrop}</CardTitle>
+              <CardTitle className="text-green-800">
+                {t.home.quickDrop}
+              </CardTitle>
               <CardDescription>{t.home.quickDropDescription}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full bg-green-600 hover:bg-green-700" onClick={() => setCurrentView("map")}>
+              <Button
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={() => setCurrentView("map")}
+              >
                 {t.home.startDrop}
               </Button>
             </CardContent>
@@ -301,24 +318,38 @@ export default function HomePage() {
         </div>
 
         <div className="mt-8 text-center">
-          <p className="text-green-700 font-medium">{t.home.readyToMakeDifference}</p>
-          <p className="text-green-600 text-sm mt-1">{t.home.earnCardanoRewards}</p>
+          <p className="text-green-700 font-medium">
+            {t.home.readyToMakeDifference}
+          </p>
+          <p className="text-green-600 text-sm mt-1">
+            {t.home.earnCardanoRewards}
+          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 mt-8">
           <Card className="border-green-200 bg-green-50">
             <CardHeader>
-              <CardTitle className="text-green-800 text-center">{t.home.availableInZugdidi}</CardTitle>
+              <CardTitle className="text-green-800 text-center">
+                {t.home.availableInZugdidi}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
                 <div className="text-center">
-                  <h3 className="font-semibold text-green-700 mb-1">{t.locations.kikalisviliBin}</h3>
-                  <p className="text-sm text-green-600">{t.locations.kikalisviliAddress}</p>
+                  <h3 className="font-semibold text-green-700 mb-1">
+                    {t.locations.kikalisviliBin}
+                  </h3>
+                  <p className="text-sm text-green-600">
+                    {t.locations.kikalisviliAddress}
+                  </p>
                 </div>
                 <div className="text-center">
-                  <h3 className="font-semibold text-green-700 mb-1">{t.locations.tradeCenterMall}</h3>
-                  <p className="text-sm text-green-600">{t.locations.tradeCenterAddress}</p>
+                  <h3 className="font-semibold text-green-700 mb-1">
+                    {t.locations.tradeCenterMall}
+                  </h3>
+                  <p className="text-sm text-green-600">
+                    {t.locations.tradeCenterAddress}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -326,14 +357,19 @@ export default function HomePage() {
 
           <Card className="border-blue-200 bg-blue-50">
             <CardHeader>
-              <CardTitle className="text-blue-800 text-center">Safety Guidelines</CardTitle>
+              <CardTitle className="text-blue-800 text-center">
+                Safety Guidelines
+              </CardTitle>
             </CardHeader>
             <CardContent className="text-center">
               <p className="text-blue-600 text-sm mb-4">
                 Learn about e-waste risk levels and proper disposal methods
               </p>
               <Link href="/guidelines">
-                <Button variant="outline" className="w-full border-blue-200 text-blue-700 hover:bg-blue-100">
+                <Button
+                  variant="outline"
+                  className="w-full border-blue-200 text-blue-700 hover:bg-blue-100"
+                >
                   View Guidelines
                 </Button>
               </Link>
@@ -342,7 +378,5 @@ export default function HomePage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
-
-

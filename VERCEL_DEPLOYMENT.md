@@ -1,19 +1,23 @@
 # 🚀 Vercel Deployment Guide for Reloop Live
 
 ## Overview
+
 This guide will walk you through deploying your Reloop Live e-waste platform with treasury management to Vercel.
 
 ## 📋 Prerequisites
 
 ### 1. Vercel Account
+
 - Sign up at [vercel.com](https://vercel.com)
 - Install Vercel CLI: `npm i -g vercel`
 
 ### 2. GitHub Repository
+
 - Push your code to GitHub
 - Ensure all files are committed
 
 ### 3. Environment Setup
+
 - Supabase project configured
 - Cardano wallet credentials ready
 - Blockfrost API keys obtained
@@ -21,14 +25,18 @@ This guide will walk you through deploying your Reloop Live e-waste platform wit
 ## 🔧 Pre-Deployment Setup
 
 ### 1. Database Migration
+
 Run the treasury schema in your Supabase project:
+
 ```sql
 -- Execute the contents of supabase-treasury-schema.sql
 -- This creates the necessary tables for treasury management
 ```
 
 ### 2. Environment Variables
+
 Copy `env-production-template.txt` and fill in your actual values:
+
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
@@ -71,11 +79,13 @@ NEXTAUTH_URL=https://your-domain.vercel.app
 ### Method 2: Vercel CLI
 
 1. **Login to Vercel**
+
    ```bash
    vercel login
    ```
 
 2. **Deploy from Project Directory**
+
    ```bash
    cd reloop-live
    vercel
@@ -89,14 +99,18 @@ NEXTAUTH_URL=https://your-domain.vercel.app
 ## ⚙️ Configuration Files
 
 ### vercel.json
+
 Already configured with:
+
 - Next.js build settings
 - API function timeouts (30s)
 - CORS headers for API routes
 - Production environment
 
 ### next.config.ts
+
 Ensure your Next.js config is production-ready:
+
 ```typescript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -104,16 +118,17 @@ const nextConfig = {
     appDir: true,
   },
   images: {
-    domains: ['your-supabase-domain.supabase.co'],
+    domains: ["your-supabase-domain.supabase.co"],
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;
 ```
 
 ## 🔐 Environment Variables Setup
 
 ### Required Variables
+
 ```bash
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL
@@ -132,6 +147,7 @@ NEXTAUTH_URL
 ```
 
 ### Optional Variables
+
 ```bash
 # Analytics
 NEXT_PUBLIC_GOOGLE_ANALYTICS_ID
@@ -146,11 +162,13 @@ NEXT_PUBLIC_APP_ENVIRONMENT
 ## 🗄️ Database Setup
 
 ### 1. Supabase Project
+
 - Create new project or use existing
 - Run the treasury schema migration
 - Set up Row Level Security (RLS) policies
 
 ### 2. RLS Policies Example
+
 ```sql
 -- Admin wallets policy
 CREATE POLICY "Admin wallets are viewable by admin users" ON admin_wallets
@@ -168,12 +186,15 @@ FOR SELECT USING (auth.uid() IN (
 ## 🔍 Post-Deployment Verification
 
 ### 1. Health Check
+
 - Visit your deployed URL
 - Check if the app loads correctly
 - Verify admin dashboard access
 
 ### 2. API Testing
+
 Test treasury endpoints:
+
 ```bash
 # Treasury status
 curl https://your-domain.vercel.app/api/admin/treasury/status
@@ -185,6 +206,7 @@ curl -X POST https://your-domain.vercel.app/api/admin/treasury/verify-admin \
 ```
 
 ### 3. Database Connection
+
 - Verify Supabase connection
 - Check if treasury tables exist
 - Test admin wallet authorization
@@ -194,6 +216,7 @@ curl -X POST https://your-domain.vercel.app/api/admin/treasury/verify-admin \
 ### Common Issues
 
 1. **Build Failures**
+
    ```bash
    # Check build logs in Vercel dashboard
    # Verify all dependencies are in package.json
@@ -216,6 +239,7 @@ curl -X POST https://your-domain.vercel.app/api/admin/treasury/verify-admin \
    - Monitor API response times
 
 ### Debug Commands
+
 ```bash
 # Check Vercel deployment status
 vercel ls
@@ -230,16 +254,19 @@ vercel --debug
 ## 📊 Monitoring & Analytics
 
 ### 1. Vercel Analytics
+
 - Enable in project settings
 - Monitor performance metrics
 - Track API usage
 
 ### 2. Error Tracking
+
 - Set up Sentry for error monitoring
 - Monitor treasury transaction failures
 - Track user authentication issues
 
 ### 3. Performance
+
 - Monitor API response times
 - Check database query performance
 - Optimize image loading
@@ -247,11 +274,13 @@ vercel --debug
 ## 🔄 Continuous Deployment
 
 ### 1. Automatic Deployments
+
 - Push to main branch triggers deployment
 - Preview deployments for pull requests
 - Automatic rollback on failures
 
 ### 2. Environment Management
+
 - Production: main branch
 - Preview: feature branches
 - Development: local environment
@@ -272,11 +301,13 @@ vercel --debug
 ## 🆘 Support
 
 ### Resources
+
 - [Vercel Documentation](https://vercel.com/docs)
 - [Next.js Deployment](https://nextjs.org/docs/deployment)
 - [Supabase Documentation](https://supabase.com/docs)
 
 ### Getting Help
+
 - Check Vercel deployment logs
 - Review Supabase dashboard
 - Check browser console for errors

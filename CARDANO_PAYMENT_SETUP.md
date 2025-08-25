@@ -14,6 +14,7 @@
 ### **Step 2: Create Backend Wallet**
 
 #### **Option A: Eternl Wallet (Recommended)**
+
 1. Install [Eternl Wallet](https://eternl.io/) browser extension
 2. Create new wallet
 3. Switch to **Testnet**: Settings → Network → Preprod
@@ -21,6 +22,7 @@
 5. **Save the 24 words securely!**
 
 #### **Option B: Cardano CLI**
+
 ```bash
 # Generate wallet keys
 cardano-cli address key-gen --verification-key-file payment.vkey --signing-key-file payment.skey
@@ -60,11 +62,13 @@ NODE_ENV=development
 ### **Step 5: Test Real Payments**
 
 1. **Restart your development server:**
+
    ```bash
    npm run dev
    ```
 
 2. **Check console logs for:**
+
    ```
    ✅ ADA Payment Service initialized for Cardano testnet
    💰 Backend wallet balance: 1000 ADA
@@ -80,27 +84,32 @@ NODE_ENV=development
 ### **Common Issues:**
 
 #### **"BACKEND_WALLET_SEED not set"**
+
 - ✅ Check `.env.local` file exists
 - ✅ Verify seed phrase is 24 words
 - ✅ Restart development server
 
 #### **"BLOCKFROST_PROJECT_ID not set"**
+
 - ✅ Get Project ID from blockfrost.io
 - ✅ Use Preprod (testnet) project
 - ✅ Check for typos
 
 #### **"Insufficient balance"**
+
 - ✅ Get testnet ADA from faucet
 - ✅ Wait for transaction confirmation
 - ✅ Check wallet address is correct
 
 #### **"Invalid address format"**
+
 - ✅ Use testnet addresses (start with `addr_test1`)
 - ✅ Verify address is valid Cardano format
 
 ## 🚀 **Production Deployment**
 
 ### **For Vercel:**
+
 1. **Add environment variables in Vercel dashboard**
 2. **Deploy with:**
    ```bash
@@ -108,6 +117,7 @@ NODE_ENV=development
    ```
 
 ### **For Other Platforms:**
+
 - **Railway**: Add in Railway dashboard
 - **Netlify**: Add in Netlify dashboard
 - **DigitalOcean**: Add in App Platform settings
@@ -115,16 +125,19 @@ NODE_ENV=development
 ## 💡 **Security Best Practices**
 
 ### **Never commit `.env.local`:**
+
 ```bash
 # Add to .gitignore
 echo ".env.local" >> .gitignore
 ```
 
 ### **Use different wallets:**
+
 - **Development**: Testnet wallet
 - **Production**: Mainnet wallet (when ready)
 
 ### **Monitor balances:**
+
 - Keep backend wallet funded
 - Set up alerts for low balance
 - Regular balance checks
@@ -132,14 +145,16 @@ echo ".env.local" >> .gitignore
 ## 📊 **Monitoring Real Payments**
 
 ### **Check Transaction Status:**
+
 ```javascript
 // In your admin dashboard
-const status = await adaPaymentService.getTransactionStatus(txHash)
-console.log(`Transaction confirmed: ${status.confirmed}`)
-console.log(`Confirmations: ${status.confirmations}`)
+const status = await adaPaymentService.getTransactionStatus(txHash);
+console.log(`Transaction confirmed: ${status.confirmed}`);
+console.log(`Confirmations: ${status.confirmations}`);
 ```
 
 ### **View on Cardano Explorer:**
+
 - **Testnet**: [preprod.cardanoscan.io](https://preprod.cardanoscan.io)
 - **Mainnet**: [cardanoscan.io](https://cardanoscan.io)
 
@@ -148,7 +163,7 @@ console.log(`Confirmations: ${status.confirmations}`)
 ✅ **Real Mode Active**: Console shows "Cardano testnet"  
 ✅ **Balance Displayed**: Shows actual ADA balance  
 ✅ **Real TX Hashes**: Transaction IDs start with `tx_`  
-✅ **Explorer Verification**: Transactions visible on CardanoScan  
+✅ **Explorer Verification**: Transactions visible on CardanoScan
 
 ## 🔄 **Switching to Mainnet**
 

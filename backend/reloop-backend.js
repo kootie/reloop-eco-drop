@@ -1,21 +1,21 @@
-import { Lucid, Blockfrost, Data, fromText } from "lucid-cardano"
+import { Lucid, Blockfrost, Data, fromText } from "lucid-cardano";
 // import { FireblocksSDK } from "fireblocks-sdk" // COMMENTED OUT - Using Eternl wallet connection instead
-import fs from "fs"
-import crypto from "crypto"
-import multer from "multer"
-import sharp from "sharp"
-import express from "express"
-import cors from "cors"
+import fs from "fs";
+import crypto from "crypto";
+import multer from "multer";
+import sharp from "sharp";
+import express from "express";
+import cors from "cors";
 
-const app = express()
-app.use(cors())
-app.use(express.json())
+const app = express();
+app.use(cors());
+app.use(express.json());
 
 // Configure multer for photo uploads
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
-})
+});
 
 // =============================================================================
 // CONFIGURATION - MATCHES SMART CONTRACT WITH CONSOLIDATED WALLETS
@@ -81,7 +81,7 @@ const CONFIG = {
     minLng: 36.7,
     maxLng: 36.9,
   },
-}
+};
 
 // =============================================================================
 // DATA SCHEMAS - MATCHING UPDATED AIKEN SMART CONTRACT
@@ -90,7 +90,7 @@ const CONFIG = {
 const LocationSchema = Data.Object({
   latitude: Data.Integer(), // Multiplied by 1,000,000
   longitude: Data.Integer(),
-})
+});
 
 // Updated WalletInfo schema
 const WalletInfoSchema = Data.Object({
@@ -99,7 +99,7 @@ const WalletInfoSchema = Data.Object({
   individual_balance: Data.Integer(),
   total_earned: Data.Integer(),
   created_at: Data.Integer(),
-})
+});
 
 // Updated DropDatum schema with user_id
 const DropDatum = Data.Object({
@@ -115,7 +115,7 @@ const DropDatum = Data.Object({
   timestamp: Data.Integer(),
   claimed: Data.Boolean(),
   batch_id: Data.Nullable(Data.Bytes()), // Optional batch ID
-})
+});
 
 // UserReward schema for batch processing
 const UserRewardSchema = Data.Object({
@@ -123,7 +123,7 @@ const UserRewardSchema = Data.Object({
   consolidated_wallet: Data.Bytes(),
   reward_amount: Data.Integer(),
   drop_count: Data.Integer(),
-})
+});
 
 // BatchDatum schema
 const BatchDatum = Data.Object({
@@ -132,7 +132,7 @@ const BatchDatum = Data.Object({
   total_amount: Data.Integer(),
   processed: Data.Boolean(),
   created_at: Data.Integer(),
-})
+});
 
 const BinDatum = Data.Object({
   bin_id: Data.Bytes(),
@@ -141,7 +141,7 @@ const BinDatum = Data.Object({
   bin_type: Data.Bytes(),
   active: Data.Boolean(),
   total_drops: Data.Integer(),
-})
+});
 
 // Updated ContractAction with new actions
 const ContractAction = Data.Enum([
@@ -151,21 +151,25 @@ const ContractAction = Data.Enum([
   Data.Object({ RegisterWallet: Data.Object({ user_id: Data.Bytes() }) }),
   Data.Object({ RegisterBin: Data.Object({}) }),
   Data.Object({ DeactivateBin: Data.Object({ bin_id: Data.Bytes() }) }),
-  Data.Object({ ApproveDrop: Data.Object({ 
-    drop_id: Data.Bytes(),
-    admin_username: Data.Bytes(),
-    actual_tokens: Data.Integer(),
-    notes: Data.Bytes(),
-    timestamp: Data.Integer()
-  }) }),
-  Data.Object({ RejectDrop: Data.Object({ 
-    drop_id: Data.Bytes(),
-    admin_username: Data.Bytes(),
-    actual_tokens: Data.Integer(),
-    notes: Data.Bytes(),
-    timestamp: Data.Integer()
-  }) }),
-])
+  Data.Object({
+    ApproveDrop: Data.Object({
+      drop_id: Data.Bytes(),
+      admin_username: Data.Bytes(),
+      actual_tokens: Data.Integer(),
+      notes: Data.Bytes(),
+      timestamp: Data.Integer(),
+    }),
+  }),
+  Data.Object({
+    RejectDrop: Data.Object({
+      drop_id: Data.Bytes(),
+      admin_username: Data.Bytes(),
+      actual_tokens: Data.Integer(),
+      notes: Data.Bytes(),
+      timestamp: Data.Integer(),
+    }),
+  }),
+]);
 
 // =============================================================================
 // ETERNL WALLET MANAGEMENT (Replaced Fireblocks)
@@ -175,79 +179,81 @@ class EternlWalletManager {
   constructor() {
     // Eternl wallets are connected directly by users in the frontend
     // No server-side wallet creation needed
-    console.log("Using Eternl wallet connection mode")
+    console.log("Using Eternl wallet connection mode");
   }
 
   // Validate connected wallet address
   async validateWalletAddress(address) {
     try {
       // Basic Cardano address validation
-      if (!address || typeof address !== 'string') {
-        throw new Error('Address is required and must be a string')
+      if (!address || typeof address !== "string") {
+        throw new Error("Address is required and must be a string");
       }
-      
+
       // Extremely permissive validation - accept any non-empty string for testing
       if (address.trim().length === 0) {
-        throw new Error('Address cannot be empty')
+        throw new Error("Address cannot be empty");
       }
-      
+
       // Log the address for debugging
-      console.log('Backend received address:', address)
-      console.log('Address type:', typeof address)
-      console.log('Address length:', address.length)
-      
+      console.log("Backend received address:", address);
+      console.log("Address type:", typeof address);
+      console.log("Address length:", address.length);
+
       // Accept any non-empty string as valid for maximum flexibility
-      return { valid: true, network: 'testnet' }
-      
+      return { valid: true, network: "testnet" };
     } catch (error) {
-      throw new Error(`Address validation failed: ${error.message}`)
+      throw new Error(`Address validation failed: ${error.message}`);
     }
   }
 
   // Get wallet info from connected address
   async getWalletInfo(address) {
-    const lucidInstance = await initializeLucid()
-    
+    const lucidInstance = await initializeLucid();
+
     try {
       // Get UTXOs at the address
-      const utxos = await lucidInstance.utxosAt(address)
-      
+      const utxos = await lucidInstance.utxosAt(address);
+
       // Calculate total ADA balance
-      let totalLovelace = 0n
-      utxos.forEach(utxo => {
-        totalLovelace += BigInt(utxo.assets.lovelace || 0)
-      })
+      let totalLovelace = 0n;
+      utxos.forEach((utxo) => {
+        totalLovelace += BigInt(utxo.assets.lovelace || 0);
+      });
 
       return {
         address,
         balance: Number(totalLovelace) / 1_000_000, // Convert to ADA
         utxoCount: utxos.length,
-        network: address.startsWith('addr_test1') ? 'testnet' : 'mainnet'
-      }
+        network: address.startsWith("addr_test1") ? "testnet" : "mainnet",
+      };
     } catch (error) {
-      throw new Error(`Failed to get wallet info: ${error.message}`)
+      throw new Error(`Failed to get wallet info: ${error.message}`);
     }
   }
 }
 
 // Initialize managers
-const eternlWalletManager = new EternlWalletManager()
-const userWallets = new Map() // userId -> { cardanoAddress, walletType: 'eternl', email }
+const eternlWalletManager = new EternlWalletManager();
+const userWallets = new Map(); // userId -> { cardanoAddress, walletType: 'eternl', email }
 
 // =============================================================================
 // LUCID INITIALIZATION
 // =============================================================================
 
-let lucid
+let lucid;
 async function initializeLucid() {
   if (!lucid) {
     lucid = await Lucid.new(
-      new Blockfrost("https://cardano-preprod.blockfrost.io/api/v0", process.env.BLOCKFROST_PROJECT_ID),
+      new Blockfrost(
+        "https://cardano-preprod.blockfrost.io/api/v0",
+        process.env.BLOCKFROST_PROJECT_ID,
+      ),
       "Preprod",
-    )
-    lucid.selectWalletFromSeed(process.env.BACKEND_WALLET_SEED)
+    );
+    lucid.selectWalletFromSeed(process.env.BACKEND_WALLET_SEED);
   }
-  return lucid
+  return lucid;
 }
 
 // =============================================================================
@@ -257,56 +263,59 @@ async function initializeLucid() {
 // Register new user with Eternl wallet connection
 app.post("/api/users/register", async (req, res) => {
   try {
-    const { userId, email, cardanoAddress } = req.body
+    const { userId, email, cardanoAddress } = req.body;
 
     if (!userId || !email || !cardanoAddress) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: "User ID, email, and Cardano address required",
-        details: "Please connect your Eternl wallet first"
-      })
+        details: "Please connect your Eternl wallet first",
+      });
     }
 
     // Check if user already exists
     if (userWallets.has(userId)) {
-      const existing = userWallets.get(userId)
+      const existing = userWallets.get(userId);
       return res.status(400).json({
         error: "User already registered",
         wallet: existing.cardanoAddress,
-      })
+      });
     }
 
-    console.log(`Registering new user: ${userId} (${email}) with Eternl wallet`)
+    console.log(
+      `Registering new user: ${userId} (${email}) with Eternl wallet`,
+    );
 
     // Validate the connected Eternl wallet address
-    const addressValidation = await eternlWalletManager.validateWalletAddress(cardanoAddress)
+    const addressValidation =
+      await eternlWalletManager.validateWalletAddress(cardanoAddress);
     if (!addressValidation.valid) {
       return res.status(400).json({
         error: "Invalid Cardano address",
-        details: "Please ensure your Eternl wallet is properly connected"
-      })
+        details: "Please ensure your Eternl wallet is properly connected",
+      });
     }
 
     // Get wallet info from blockchain
-    const walletInfo = await eternlWalletManager.getWalletInfo(cardanoAddress)
+    const walletInfo = await eternlWalletManager.getWalletInfo(cardanoAddress);
 
     // Store user info locally
     userWallets.set(userId, {
       cardanoAddress,
-      walletType: 'eternl',
+      walletType: "eternl",
       email,
       balance: walletInfo.balance,
       network: walletInfo.network,
       createdAt: new Date(),
-    })
+    });
 
     // Register wallet in smart contract
     const txHash = await registerWalletInContract({
       userId,
       consolidatedWallet: cardanoAddress,
-    })
+    });
 
     // Store in config for quick access
-    CONFIG.CONSOLIDATED_WALLETS[userId] = cardanoAddress
+    CONFIG.CONSOLIDATED_WALLETS[userId] = cardanoAddress;
 
     res.json({
       success: true,
@@ -314,7 +323,7 @@ app.post("/api/users/register", async (req, res) => {
         userId,
         email,
         cardanoAddress,
-        walletType: 'eternl',
+        walletType: "eternl",
         balance: walletInfo.balance,
         network: walletInfo.network,
       },
@@ -323,29 +332,29 @@ app.post("/api/users/register", async (req, res) => {
         contractAddress: CONFIG.CONTRACT_ADDRESS,
       },
       message: "User registered successfully with Eternl wallet!",
-    })
+    });
   } catch (error) {
-    console.error("Eternl registration error:", error)
+    console.error("Eternl registration error:", error);
     res.status(500).json({
       error: error.message,
       details: "Failed to register user with Eternl wallet",
-    })
+    });
   }
-})
+});
 
 // Get user wallet info and balance
 app.get("/api/users/:userId/wallet", async (req, res) => {
   try {
-    const { userId } = req.params
+    const { userId } = req.params;
 
     // Get from local storage
-    const user = userWallets.get(userId)
+    const user = userWallets.get(userId);
     if (!user) {
-      return res.status(404).json({ error: "User not found" })
+      return res.status(404).json({ error: "User not found" });
     }
 
     // Get smart contract wallet info
-    const contractWallet = await findWalletInContract(userId)
+    const contractWallet = await findWalletInContract(userId);
 
     res.json({
       success: true,
@@ -364,29 +373,29 @@ app.get("/api/users/:userId/wallet", async (req, res) => {
           : null,
       },
       createdAt: user.createdAt,
-    })
+    });
   } catch (error) {
-    console.error("Wallet info error:", error)
-    res.status(500).json({ error: error.message })
+    console.error("Wallet info error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // Claim pending rewards for user
 app.post("/api/users/:userId/claim", async (req, res) => {
   try {
-    const { userId } = req.params
+    const { userId } = req.params;
 
-    const walletInfo = await findWalletInContract(userId)
+    const walletInfo = await findWalletInContract(userId);
     if (!walletInfo) {
-      return res.status(404).json({ error: "User wallet not found" })
+      return res.status(404).json({ error: "User wallet not found" });
     }
 
     if (walletInfo.individual_balance <= 0) {
-      return res.status(400).json({ error: "No pending rewards to claim" })
+      return res.status(400).json({ error: "No pending rewards to claim" });
     }
 
     // Claim rewards from smart contract
-    const txHash = await claimWalletRewards(userId)
+    const txHash = await claimWalletRewards(userId);
 
     res.json({
       success: true,
@@ -394,12 +403,12 @@ app.post("/api/users/:userId/claim", async (req, res) => {
       claimedAmount: `${walletInfo.individual_balance / 1_000_000} ADA`,
       transactionHash: txHash,
       message: "Rewards claimed successfully!",
-    })
+    });
   } catch (error) {
-    console.error("Reward claim error:", error)
-    res.status(500).json({ error: error.message })
+    console.error("Reward claim error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // =============================================================================
 // BATCH PROCESSING ENDPOINTS
@@ -408,46 +417,46 @@ app.post("/api/users/:userId/claim", async (req, res) => {
 // Process batch rewards for multiple users
 app.post("/api/batch/process", async (req, res) => {
   try {
-    const { userIds, minBalance = 1000000 } = req.body // Default min 1 ADA
+    const { userIds, minBalance = 1000000 } = req.body; // Default min 1 ADA
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
-      return res.status(400).json({ error: "User IDs array required" })
+      return res.status(400).json({ error: "User IDs array required" });
     }
 
     if (userIds.length > 50) {
-      return res.status(400).json({ error: "Maximum 50 users per batch" })
+      return res.status(400).json({ error: "Maximum 50 users per batch" });
     }
 
     // Get all user wallets and filter by minimum balance
-    const userRewards = []
-    let totalAmount = 0
+    const userRewards = [];
+    let totalAmount = 0;
 
     for (const userId of userIds) {
-      const walletInfo = await findWalletInContract(userId)
+      const walletInfo = await findWalletInContract(userId);
       if (walletInfo && walletInfo.individual_balance >= minBalance) {
         userRewards.push({
           user_id: userId,
           consolidated_wallet: walletInfo.consolidated_wallet,
           reward_amount: walletInfo.individual_balance,
           drop_count: Math.floor(walletInfo.individual_balance / 1000000), // Estimate drops
-        })
-        totalAmount += Number(walletInfo.individual_balance)
+        });
+        totalAmount += Number(walletInfo.individual_balance);
       }
     }
 
     if (userRewards.length === 0) {
       return res.status(400).json({
         error: `No users found with minimum balance of ${minBalance / 1_000_000} ADA`,
-      })
+      });
     }
 
     // Create batch and process
-    const batchId = crypto.randomBytes(16).toString("hex")
+    const batchId = crypto.randomBytes(16).toString("hex");
     const txHash = await processBatchRewards({
       batchId,
       userRewards,
       totalAmount,
-    })
+    });
 
     res.json({
       success: true,
@@ -456,27 +465,27 @@ app.post("/api/batch/process", async (req, res) => {
       totalAmount: `${totalAmount / 1_000_000} ADA`,
       transactionHash: txHash,
       message: "Batch processing completed successfully",
-    })
+    });
   } catch (error) {
-    console.error("Batch processing error:", error)
-    res.status(500).json({ error: error.message })
+    console.error("Batch processing error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // Get batch processing history
 app.get("/api/batch/history", async (req, res) => {
   try {
-    const batches = await getBatchHistory()
+    const batches = await getBatchHistory();
 
     res.json({
       success: true,
       batches,
       totalBatches: batches.length,
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // =============================================================================
 // UPDATED DROP SUBMISSION (with user_id and Fireblocks integration)
@@ -485,58 +494,64 @@ app.get("/api/batch/history", async (req, res) => {
 // Submit e-waste drop (updated for consolidated wallets)
 app.post("/api/drops/submit", upload.single("photo"), async (req, res) => {
   try {
-    const { userId, binQrCode, binLocation, userLocation, deviceType } = req.body
+    const { userId, binQrCode, binLocation, userLocation, deviceType } =
+      req.body;
 
     // Parse locations
-    const parsedBinLocation = JSON.parse(binLocation)
-    const parsedUserLocation = JSON.parse(userLocation)
+    const parsedBinLocation = JSON.parse(binLocation);
+    const parsedUserLocation = JSON.parse(userLocation);
 
     // Validate inputs
     if (!req.file) {
-      return res.status(400).json({ error: "Photo is required" })
+      return res.status(400).json({ error: "Photo is required" });
     }
 
     if (!userId) {
-      return res.status(400).json({ error: "User ID is required" })
+      return res.status(400).json({ error: "User ID is required" });
     }
 
     if (!CONFIG.DEVICE_REWARDS[deviceType]) {
       return res.status(400).json({
         error: "Invalid device type",
         validDevices: Object.keys(CONFIG.DEVICE_REWARDS),
-      })
+      });
     }
 
     // Validate user exists
-    const user = userWallets.get(userId)
+    const user = userWallets.get(userId);
     if (!user) {
-      return res.status(400).json({ error: "User not registered. Please register first." })
+      return res
+        .status(400)
+        .json({ error: "User not registered. Please register first." });
     }
 
     // Validate locations
-    if (!isValidLocation(parsedBinLocation) || !isValidLocation(parsedUserLocation)) {
-      return res.status(400).json({ error: "Invalid location coordinates" })
+    if (
+      !isValidLocation(parsedBinLocation) ||
+      !isValidLocation(parsedUserLocation)
+    ) {
+      return res.status(400).json({ error: "Invalid location coordinates" });
     }
 
     // Check if user is near bin (within 100m)
     if (!isUserNearBin(parsedUserLocation, parsedBinLocation)) {
       return res.status(400).json({
         error: "You must be within 100m of the bin to make a drop",
-      })
+      });
     }
 
     // Verify bin exists and is active
-    const binExists = await verifyBinExists(binQrCode, parsedBinLocation)
+    const binExists = await verifyBinExists(binQrCode, parsedBinLocation);
     if (!binExists) {
-      return res.status(400).json({ error: "Bin not found or inactive" })
+      return res.status(400).json({ error: "Bin not found or inactive" });
     }
 
     // Process photo and create hash
-    const photoHash = await processPhoto(req.file)
+    const photoHash = await processPhoto(req.file);
 
     // Generate unique drop ID
-    const dropId = crypto.randomBytes(16).toString("hex")
-    const rewardAmount = CONFIG.DEVICE_REWARDS[deviceType]
+    const dropId = crypto.randomBytes(16).toString("hex");
+    const rewardAmount = CONFIG.DEVICE_REWARDS[deviceType];
 
     // Submit to smart contract with user_id
     const txHash = await submitDropToContract({
@@ -549,7 +564,7 @@ app.post("/api/drops/submit", upload.single("photo"), async (req, res) => {
       deviceType,
       photoHash,
       rewardAmount,
-    })
+    });
 
     res.json({
       success: true,
@@ -560,22 +575,27 @@ app.post("/api/drops/submit", upload.single("photo"), async (req, res) => {
       binQrCode,
       transactionHash: txHash,
       message: "Drop submitted successfully! Reward added to your balance.",
-    })
+    });
   } catch (error) {
-    console.error("Drop submission error:", error)
-    res.status(500).json({ error: error.message })
+    console.error("Drop submission error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // Get drop history for user (updated for user_id)
 app.get("/api/drops/history/:userId", async (req, res) => {
   try {
-    const { userId } = req.params
-    const drops = await getUserDropHistory(userId)
+    const { userId } = req.params;
+    const drops = await getUserDropHistory(userId);
 
-    const totalRewards = drops.reduce((sum, drop) => sum + drop.reward_amount, 0)
-    const claimedRewards = drops.filter((d) => d.claimed).reduce((sum, drop) => sum + drop.reward_amount, 0)
-    const pendingRewards = totalRewards - claimedRewards
+    const totalRewards = drops.reduce(
+      (sum, drop) => sum + drop.reward_amount,
+      0,
+    );
+    const claimedRewards = drops
+      .filter((d) => d.claimed)
+      .reduce((sum, drop) => sum + drop.reward_amount, 0);
+    const pendingRewards = totalRewards - claimedRewards;
 
     res.json({
       success: true,
@@ -585,11 +605,11 @@ app.get("/api/drops/history/:userId", async (req, res) => {
       claimedRewards: `${claimedRewards / 1_000_000} ADA`,
       pendingRewards: `${pendingRewards / 1_000_000} ADA`,
       userId,
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // =============================================================================
 // BIN MANAGEMENT (unchanged)
@@ -597,12 +617,12 @@ app.get("/api/drops/history/:userId", async (req, res) => {
 
 app.post("/api/bins/register", async (req, res) => {
   try {
-    const { binId, location, binType = "standard" } = req.body
+    const { binId, location, binType = "standard" } = req.body;
 
-    const qrCode = `RELOOP_BIN_${binId}_${Date.now()}`
+    const qrCode = `RELOOP_BIN_${binId}_${Date.now()}`;
 
     if (!isValidLocation(location)) {
-      return res.status(400).json({ error: "Invalid location coordinates" })
+      return res.status(400).json({ error: "Invalid location coordinates" });
     }
 
     const txHash = await registerBinInContract({
@@ -610,7 +630,7 @@ app.post("/api/bins/register", async (req, res) => {
       qrCode,
       location,
       binType,
-    })
+    });
 
     res.json({
       success: true,
@@ -619,53 +639,59 @@ app.post("/api/bins/register", async (req, res) => {
       location,
       transactionHash: txHash,
       message: "Bin registered successfully",
-    })
+    });
   } catch (error) {
-    console.error("Bin registration error:", error)
-    res.status(500).json({ error: error.message })
+    console.error("Bin registration error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 app.get("/api/bins/active", async (req, res) => {
   try {
-    const activeBins = await getActiveBinsFromContract()
+    const activeBins = await getActiveBinsFromContract();
     res.json({
       success: true,
       bins: activeBins,
       count: activeBins.length,
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 app.get("/api/bins/nearest", async (req, res) => {
   try {
-    const { lat, lng, radius = 5 } = req.query
+    const { lat, lng, radius = 5 } = req.query;
 
     if (!lat || !lng) {
-      return res.status(400).json({ error: "Latitude and longitude required" })
+      return res.status(400).json({ error: "Latitude and longitude required" });
     }
 
-    const userLocation = { latitude: Number.parseFloat(lat), longitude: Number.parseFloat(lng) }
-    const nearestBins = await findNearestBins(userLocation, Number.parseFloat(radius))
+    const userLocation = {
+      latitude: Number.parseFloat(lat),
+      longitude: Number.parseFloat(lng),
+    };
+    const nearestBins = await findNearestBins(
+      userLocation,
+      Number.parseFloat(radius),
+    );
 
     res.json({
       success: true,
       bins: nearestBins,
       userLocation: userLocation,
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // =============================================================================
 // UPDATED SMART CONTRACT INTERACTION FUNCTIONS
 // =============================================================================
 
 async function registerWalletInContract(walletData) {
-  const lucidInstance = await initializeLucid()
+  const lucidInstance = await initializeLucid();
 
   const walletDatum = Data.to(
     {
@@ -676,14 +702,14 @@ async function registerWalletInContract(walletData) {
       created_at: BigInt(Date.now()),
     },
     WalletInfoSchema,
-  )
+  );
 
   const redeemer = Data.to(
     {
       RegisterWallet: { user_id: fromText(walletData.userId) },
     },
     ContractAction,
-  )
+  );
 
   const tx = await lucidInstance
     .newTx()
@@ -698,14 +724,14 @@ async function registerWalletInContract(walletData) {
       type: "PlutusV2",
       script: CONFIG.CONTRACT_SCRIPT,
     })
-    .complete()
+    .complete();
 
-  const signedTx = await tx.sign().complete()
-  return await signedTx.submit()
+  const signedTx = await tx.sign().complete();
+  return await signedTx.submit();
 }
 
 async function submitDropToContract(dropData) {
-  const lucidInstance = await initializeLucid()
+  const lucidInstance = await initializeLucid();
 
   const dropDatum = Data.to(
     {
@@ -715,11 +741,17 @@ async function submitDropToContract(dropData) {
       bin_qr_code: fromText(dropData.binQrCode),
       bin_location: {
         latitude: BigInt(Math.round(dropData.binLocation.latitude * 1_000_000)),
-        longitude: BigInt(Math.round(dropData.binLocation.longitude * 1_000_000)),
+        longitude: BigInt(
+          Math.round(dropData.binLocation.longitude * 1_000_000),
+        ),
       },
       user_location: {
-        latitude: BigInt(Math.round(dropData.userLocation.latitude * 1_000_000)),
-        longitude: BigInt(Math.round(dropData.userLocation.longitude * 1_000_000)),
+        latitude: BigInt(
+          Math.round(dropData.userLocation.latitude * 1_000_000),
+        ),
+        longitude: BigInt(
+          Math.round(dropData.userLocation.longitude * 1_000_000),
+        ),
       },
       device_type: fromText(dropData.deviceType),
       photo_hash: dropData.photoHash,
@@ -729,13 +761,13 @@ async function submitDropToContract(dropData) {
       batch_id: null,
     },
     DropDatum,
-  )
+  );
 
-  const redeemer = Data.to({ SubmitDrop: {} }, ContractAction)
+  const redeemer = Data.to({ SubmitDrop: {} }, ContractAction);
 
   // Get bin UTXO and user wallet UTXO
-  const binUTXO = await findBinUTXO(dropData.binQrCode)
-  const walletUTXO = await findWalletUTXO(dropData.userId)
+  const binUTXO = await findBinUTXO(dropData.binQrCode);
+  const walletUTXO = await findWalletUTXO(dropData.userId);
 
   const tx = await lucidInstance
     .newTx()
@@ -751,18 +783,18 @@ async function submitDropToContract(dropData) {
       type: "PlutusV2",
       script: CONFIG.CONTRACT_SCRIPT,
     })
-    .complete()
+    .complete();
 
-  const signedTx = await tx.sign().complete()
-  return await signedTx.submit()
+  const signedTx = await tx.sign().complete();
+  return await signedTx.submit();
 }
 
 async function claimWalletRewards(userId) {
-  const lucidInstance = await initializeLucid()
+  const lucidInstance = await initializeLucid();
 
-  const walletUTXO = await findWalletUTXO(userId)
+  const walletUTXO = await findWalletUTXO(userId);
   if (!walletUTXO) {
-    throw new Error("User wallet not found in contract")
+    throw new Error("User wallet not found in contract");
   }
 
   const redeemer = Data.to(
@@ -770,7 +802,7 @@ async function claimWalletRewards(userId) {
       ClaimReward: { user_id: fromText(userId) },
     },
     ContractAction,
-  )
+  );
 
   const tx = await lucidInstance
     .newTx()
@@ -779,14 +811,14 @@ async function claimWalletRewards(userId) {
       type: "PlutusV2",
       script: CONFIG.CONTRACT_SCRIPT,
     })
-    .complete()
+    .complete();
 
-  const signedTx = await tx.sign().complete()
-  return await signedTx.submit()
+  const signedTx = await tx.sign().complete();
+  return await signedTx.submit();
 }
 
 async function processBatchRewards(batchData) {
-  const lucidInstance = await initializeLucid()
+  const lucidInstance = await initializeLucid();
 
   const batchDatum = Data.to(
     {
@@ -802,14 +834,14 @@ async function processBatchRewards(batchData) {
       created_at: BigInt(Date.now()),
     },
     BatchDatum,
-  )
+  );
 
   const redeemer = Data.to(
     {
       ProcessBatch: { batch_id: fromText(batchData.batchId) },
     },
     ContractAction,
-  )
+  );
 
   const tx = await lucidInstance
     .newTx()
@@ -824,14 +856,14 @@ async function processBatchRewards(batchData) {
       type: "PlutusV2",
       script: CONFIG.CONTRACT_SCRIPT,
     })
-    .complete()
+    .complete();
 
-  const signedTx = await tx.sign().complete()
-  return await signedTx.submit()
+  const signedTx = await tx.sign().complete();
+  return await signedTx.submit();
 }
 
 async function registerBinInContract(binData) {
-  const lucidInstance = await initializeLucid()
+  const lucidInstance = await initializeLucid();
 
   const binDatum = Data.to(
     {
@@ -846,9 +878,9 @@ async function registerBinInContract(binData) {
       total_drops: 0n,
     },
     BinDatum,
-  )
+  );
 
-  const redeemer = Data.to({ RegisterBin: {} }, ContractAction)
+  const redeemer = Data.to({ RegisterBin: {} }, ContractAction);
 
   const tx = await lucidInstance
     .newTx()
@@ -863,10 +895,10 @@ async function registerBinInContract(binData) {
       type: "PlutusV2",
       script: CONFIG.CONTRACT_SCRIPT,
     })
-    .complete()
+    .complete();
 
-  const signedTx = await tx.sign().complete()
-  return await signedTx.submit()
+  const signedTx = await tx.sign().complete();
+  return await signedTx.submit();
 }
 
 // =============================================================================
@@ -877,103 +909,108 @@ async function findWalletInContract(userId) {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
+  const utxos = await response.json();
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, WalletInfoSchema)
-        const storedUserId = Buffer.from(datum.user_id, "hex").toString("utf8")
+        const datum = Data.from(utxo.inline_datum, WalletInfoSchema);
+        const storedUserId = Buffer.from(datum.user_id, "hex").toString("utf8");
 
         if (storedUserId === userId) {
           return {
             user_id: storedUserId,
-            consolidated_wallet: Buffer.from(datum.consolidated_wallet, "hex").toString("utf8"),
+            consolidated_wallet: Buffer.from(
+              datum.consolidated_wallet,
+              "hex",
+            ).toString("utf8"),
             individual_balance: Number(datum.individual_balance),
             total_earned: Number(datum.total_earned),
             created_at: Number(datum.created_at),
-          }
+          };
         }
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return null
+  return null;
 }
 
 async function findWalletUTXO(userId) {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
+  const utxos = await response.json();
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, WalletInfoSchema)
-        const storedUserId = Buffer.from(datum.user_id, "hex").toString("utf8")
+        const datum = Data.from(utxo.inline_datum, WalletInfoSchema);
+        const storedUserId = Buffer.from(datum.user_id, "hex").toString("utf8");
 
         if (storedUserId === userId) {
-          return utxo
+          return utxo;
         }
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return null
+  return null;
 }
 
 async function getBatchHistory() {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
-  const batches = []
+  const utxos = await response.json();
+  const batches = [];
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, BatchDatum)
+        const datum = Data.from(utxo.inline_datum, BatchDatum);
         batches.push({
           batch_id: Buffer.from(datum.batch_id, "hex").toString("utf8"),
           user_count: datum.user_rewards.length,
           total_amount: Number(datum.total_amount) / 1_000_000,
           processed: datum.processed,
           created_at: new Date(Number(datum.created_at)).toISOString(),
-        })
+        });
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return batches.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+  return batches.sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at),
+  );
 }
 
 async function getUserDropHistory(userId) {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
-  const userDrops = []
+  const utxos = await response.json();
+  const userDrops = [];
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, DropDatum)
-        const storedUserId = Buffer.from(datum.user_id, "hex").toString("utf8")
+        const datum = Data.from(utxo.inline_datum, DropDatum);
+        const storedUserId = Buffer.from(datum.user_id, "hex").toString("utf8");
 
         if (storedUserId === userId) {
           userDrops.push({
@@ -982,30 +1019,30 @@ async function getUserDropHistory(userId) {
             reward_amount: Number(datum.reward_amount),
             claimed: datum.claimed,
             timestamp: Number(datum.timestamp),
-          })
+          });
         }
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return userDrops.sort((a, b) => b.timestamp - a.timestamp)
+  return userDrops.sort((a, b) => b.timestamp - a.timestamp);
 }
 
 async function getActiveBinsFromContract() {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
-  const bins = []
+  const utxos = await response.json();
+  const bins = [];
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, BinDatum)
+        const datum = Data.from(utxo.inline_datum, BinDatum);
         if (datum.active) {
           bins.push({
             binId: Buffer.from(datum.bin_id, "hex").toString("utf8"),
@@ -1016,41 +1053,41 @@ async function getActiveBinsFromContract() {
             },
             binType: Buffer.from(datum.bin_type, "hex").toString("utf8"),
             totalDrops: Number(datum.total_drops),
-          })
+          });
         }
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return bins
+  return bins;
 }
 
 async function findBinUTXO(qrCode) {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
+  const utxos = await response.json();
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, BinDatum)
-        const storedQrCode = Buffer.from(datum.qr_code, "hex").toString("utf8")
+        const datum = Data.from(utxo.inline_datum, BinDatum);
+        const storedQrCode = Buffer.from(datum.qr_code, "hex").toString("utf8");
 
         if (storedQrCode === qrCode) {
-          return utxo
+          return utxo;
         }
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return null
+  return null;
 }
 
 // =============================================================================
@@ -1062,11 +1099,11 @@ async function processPhoto(photoFile) {
   const processedPhoto = await sharp(photoFile.buffer)
     .resize(800, 600, { fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 85 })
-    .toBuffer()
+    .toBuffer();
 
   // Create SHA-256 hash
-  const hash = crypto.createHash("sha256").update(processedPhoto).digest()
-  return new Uint8Array(hash)
+  const hash = crypto.createHash("sha256").update(processedPhoto).digest();
+  return new Uint8Array(hash);
 }
 
 function isValidLocation(location) {
@@ -1078,33 +1115,33 @@ function isValidLocation(location) {
     location.latitude <= 90 &&
     location.longitude >= -180 &&
     location.longitude <= 180
-  )
+  );
 }
 
 function isUserNearBin(userLoc, binLoc) {
   // Calculate distance using simplified formula
-  const latDiff = Math.abs(userLoc.latitude - binLoc.latitude)
-  const lngDiff = Math.abs(userLoc.longitude - binLoc.longitude)
+  const latDiff = Math.abs(userLoc.latitude - binLoc.latitude);
+  const lngDiff = Math.abs(userLoc.longitude - binLoc.longitude);
 
   // Approximately 0.001 degrees = ~111m at equator
-  const maxDiff = 0.001 // ~100m
+  const maxDiff = 0.001; // ~100m
 
-  return latDiff <= maxDiff && lngDiff <= maxDiff
+  return latDiff <= maxDiff && lngDiff <= maxDiff;
 }
 
 async function verifyBinExists(qrCode, location) {
-  const activeBins = await getActiveBinsFromContract()
+  const activeBins = await getActiveBinsFromContract();
 
   return activeBins.some(
     (bin) =>
       bin.qrCode === qrCode &&
       Math.abs(bin.location.latitude - location.latitude) < 0.0001 &&
       Math.abs(bin.location.longitude - location.longitude) < 0.0001,
-  )
+  );
 }
 
 async function findNearestBins(userLocation, radiusKm) {
-  const activeBins = await getActiveBinsFromContract()
+  const activeBins = await getActiveBinsFromContract();
 
   return activeBins
     .map((bin) => ({
@@ -1112,24 +1149,24 @@ async function findNearestBins(userLocation, radiusKm) {
       distance: calculateDistance(userLocation, bin.location),
     }))
     .filter((bin) => bin.distance <= radiusKm)
-    .sort((a, b) => a.distance - b.distance)
+    .sort((a, b) => a.distance - b.distance);
 }
 
 function calculateDistance(loc1, loc2) {
   // Haversine formula for distance calculation
-  const R = 6371 // Earth's radius in km
-  const dLat = ((loc2.latitude - loc1.latitude) * Math.PI) / 180
-  const dLon = ((loc2.longitude - loc1.longitude) * Math.PI) / 180
+  const R = 6371; // Earth's radius in km
+  const dLat = ((loc2.latitude - loc1.latitude) * Math.PI) / 180;
+  const dLon = ((loc2.longitude - loc1.longitude) * Math.PI) / 180;
 
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((loc1.latitude * Math.PI) / 180) *
       Math.cos((loc2.latitude * Math.PI) / 180) *
       Math.sin(dLon / 2) *
-      Math.sin(dLon / 2)
+      Math.sin(dLon / 2);
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 // =============================================================================
@@ -1139,7 +1176,13 @@ function calculateDistance(loc1, loc2) {
 // Get device types and rewards
 app.get("/api/info/devices", (req, res) => {
   const deviceCategories = {
-    "Cables & Chargers (1 ADA)": ["usb_cable", "phone_charger", "laptop_charger", "hdmi_cable", "audio_cable"],
+    "Cables & Chargers (1 ADA)": [
+      "usb_cable",
+      "phone_charger",
+      "laptop_charger",
+      "hdmi_cable",
+      "audio_cable",
+    ],
     "Small Electronics (1.5 ADA)": [
       "headphones",
       "earbuds",
@@ -1157,34 +1200,48 @@ app.get("/api/info/devices", (req, res) => {
       "portable_speaker",
       "gaming_controller",
     ],
-    "Large Electronics (5 ADA)": ["tablet", "laptop", "desktop_computer", "monitor", "printer"],
-    "Batteries & Hazardous (7 ADA)": ["phone_battery", "laptop_battery", "power_bank", "car_battery", "ups_battery"],
-  }
+    "Large Electronics (5 ADA)": [
+      "tablet",
+      "laptop",
+      "desktop_computer",
+      "monitor",
+      "printer",
+    ],
+    "Batteries & Hazardous (7 ADA)": [
+      "phone_battery",
+      "laptop_battery",
+      "power_bank",
+      "car_battery",
+      "ups_battery",
+    ],
+  };
 
   res.json({
     success: true,
     deviceCategories,
     rewardMapping: CONFIG.DEVICE_REWARDS,
     totalDeviceTypes: Object.keys(CONFIG.DEVICE_REWARDS).length,
-  })
-})
+  });
+});
 
 // Get all registered users (admin) - UPDATED WITH FIREBLOCKS
 app.get("/api/admin/users", async (req, res) => {
   try {
     // Get users from local storage
-    const users = Array.from(userWallets.entries()).map(([userId, userData]) => ({
-      userId,
-      email: userData.email,
-      cardanoAddress: userData.cardanoAddress,
-      vaultId: userData.vaultId,
-      createdAt: userData.createdAt,
-    }))
+    const users = Array.from(userWallets.entries()).map(
+      ([userId, userData]) => ({
+        userId,
+        email: userData.email,
+        cardanoAddress: userData.cardanoAddress,
+        vaultId: userData.vaultId,
+        createdAt: userData.createdAt,
+      }),
+    );
 
     // Enhance with smart contract data
-    const enhancedUsers = []
+    const enhancedUsers = [];
     for (const user of users) {
-      const contractWallet = await findWalletInContract(user.userId)
+      const contractWallet = await findWalletInContract(user.userId);
       enhancedUsers.push({
         ...user,
         contractBalance: contractWallet
@@ -1193,12 +1250,14 @@ app.get("/api/admin/users", async (req, res) => {
               totalEarned: contractWallet.total_earned / 1_000_000,
             }
           : null,
-      })
+      });
     }
 
     res.json({
       success: true,
-      users: enhancedUsers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)),
+      users: enhancedUsers.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+      ),
       summary: {
         totalUsers: users.length,
         totalPendingRewards: enhancedUsers.reduce(
@@ -1206,29 +1265,37 @@ app.get("/api/admin/users", async (req, res) => {
           0,
         ),
         totalEarnedRewards: enhancedUsers.reduce(
-          (sum, u) => sum + (u.contractBalance ? u.contractBalance.totalEarned : 0),
+          (sum, u) =>
+            sum + (u.contractBalance ? u.contractBalance.totalEarned : 0),
           0,
         ),
       },
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // Get platform statistics
 app.get("/api/stats", async (req, res) => {
   try {
-    const [users, bins, batches] = await Promise.all([getAllUsers(), getActiveBinsFromContract(), getBatchHistory()])
+    const [users, bins, batches] = await Promise.all([
+      getAllUsers(),
+      getActiveBinsFromContract(),
+      getBatchHistory(),
+    ]);
 
     // Calculate total drops from all users
-    let totalDrops = 0
-    let totalRewards = 0
+    let totalDrops = 0;
+    let totalRewards = 0;
 
     for (const user of users) {
-      const userDrops = await getUserDropHistory(user.userId)
-      totalDrops += userDrops.length
-      totalRewards += userDrops.reduce((sum, drop) => sum + drop.reward_amount, 0)
+      const userDrops = await getUserDropHistory(user.userId);
+      totalDrops += userDrops.length;
+      totalRewards += userDrops.reduce(
+        (sum, drop) => sum + drop.reward_amount,
+        0,
+      );
     }
 
     res.json({
@@ -1242,42 +1309,48 @@ app.get("/api/stats", async (req, res) => {
         activeBins: bins.filter((b) => b.active).length,
       },
       recentActivity: {
-        newUsersToday: users.filter((u) => new Date(u.createdAt) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length,
+        newUsersToday: users.filter(
+          (u) =>
+            new Date(u.createdAt) > new Date(Date.now() - 24 * 60 * 60 * 1000),
+        ).length,
         processingBatches: batches.filter((b) => !b.processed).length,
       },
-    })
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message })
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 async function getAllUsers() {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
-  const users = []
+  const utxos = await response.json();
+  const users = [];
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, WalletInfoSchema)
+        const datum = Data.from(utxo.inline_datum, WalletInfoSchema);
         users.push({
           userId: Buffer.from(datum.user_id, "hex").toString("utf8"),
-          consolidatedWallet: Buffer.from(datum.consolidated_wallet, "hex").toString("utf8"),
+          consolidatedWallet: Buffer.from(
+            datum.consolidated_wallet,
+            "hex",
+          ).toString("utf8"),
           pendingBalance: Number(datum.individual_balance),
           totalEarned: Number(datum.total_earned),
           createdAt: new Date(Number(datum.created_at)).toISOString(),
-        })
+        });
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return users
+  return users;
 }
 
 // Health check
@@ -1287,10 +1360,12 @@ app.get("/api/health", (req, res) => {
     message: "Reloop backend is running with Fireblocks integration",
     contractAddress: CONFIG.CONTRACT_ADDRESS ? "configured" : "missing",
     consolidatedWallets: Object.keys(CONFIG.CONSOLIDATED_WALLETS).length,
-    fireblocksIntegration: process.env.FIREBLOCKS_API_KEY ? "configured" : "missing",
+    fireblocksIntegration: process.env.FIREBLOCKS_API_KEY
+      ? "configured"
+      : "missing",
     timestamp: new Date().toISOString(),
-  })
-})
+  });
+});
 
 // =============================================================================
 // ADMIN APPROVAL WITH ADA PAYMENT INTEGRATION
@@ -1299,94 +1374,109 @@ app.get("/api/health", (req, res) => {
 // Admin approve/reject drop with ADA payment
 app.post("/api/admin/drops/:dropId/review", async (req, res) => {
   try {
-    const { dropId } = req.params
-    const { action, actualTokens, notes, adminUsername } = req.body
+    const { dropId } = req.params;
+    const { action, actualTokens, notes, adminUsername } = req.body;
 
     if (!action || !adminUsername) {
-      return res.status(400).json({ error: "Action and admin username required" })
+      return res
+        .status(400)
+        .json({ error: "Action and admin username required" });
     }
 
-    if (action === 'approve' && (actualTokens === undefined || actualTokens < 0)) {
-      return res.status(400).json({ error: "Valid token amount required for approval" })
+    if (
+      action === "approve" &&
+      (actualTokens === undefined || actualTokens < 0)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "Valid token amount required for approval" });
     }
 
     // Get drop details from smart contract
-    const dropData = await findDropInContract(dropId)
+    const dropData = await findDropInContract(dropId);
     if (!dropData) {
-      return res.status(404).json({ error: "Drop not found in smart contract" })
+      return res
+        .status(404)
+        .json({ error: "Drop not found in smart contract" });
     }
 
     // Get user wallet info
-    const userWallet = await findWalletInContract(dropData.user_id)
+    const userWallet = await findWalletInContract(dropData.user_id);
     if (!userWallet) {
-      return res.status(404).json({ error: "User wallet not found" })
+      return res.status(404).json({ error: "User wallet not found" });
     }
 
-    let paymentResult = null
+    let paymentResult = null;
 
-    if (action === 'approve') {
+    if (action === "approve") {
       // Send ADA payment to user's Eternl wallet
       try {
-        const lucidInstance = await initializeLucid()
-        
+        const lucidInstance = await initializeLucid();
+
         // Calculate lovelace amount
-        const lovelaceAmount = Math.floor(actualTokens * 1_000_000)
-        
+        const lovelaceAmount = Math.floor(actualTokens * 1_000_000);
+
         // Build transaction to send ADA to user's wallet
         const tx = await lucidInstance
           .newTx()
-          .payToAddress(userWallet.consolidated_wallet, { lovelace: BigInt(lovelaceAmount) })
+          .payToAddress(userWallet.consolidated_wallet, {
+            lovelace: BigInt(lovelaceAmount),
+          })
           .attachMetadata(674, {
-            type: 'reloop_reward_payment',
+            type: "reloop_reward_payment",
             drop_id: dropId,
             user_id: dropData.user_id,
             amount_ada: actualTokens,
             admin: adminUsername,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           })
-          .complete()
+          .complete();
 
-        const signedTx = await tx.sign().complete()
-        const txHash = await signedTx.submit()
+        const signedTx = await tx.sign().complete();
+        const txHash = await signedTx.submit();
 
         paymentResult = {
           success: true,
           txHash,
           amount: actualTokens,
-          recipientAddress: userWallet.consolidated_wallet
-        }
+          recipientAddress: userWallet.consolidated_wallet,
+        };
 
-        console.log(`✅ Sent ${actualTokens} ADA to ${userWallet.consolidated_wallet} for drop ${dropId}`)
-
+        console.log(
+          `✅ Sent ${actualTokens} ADA to ${userWallet.consolidated_wallet} for drop ${dropId}`,
+        );
       } catch (paymentError) {
-        console.error('Payment error:', paymentError)
-        return res.status(500).json({ 
+        console.error("Payment error:", paymentError);
+        return res.status(500).json({
           error: "Failed to send ADA payment to user wallet",
-          details: paymentError.message 
-        })
+          details: paymentError.message,
+        });
       }
     }
 
     // Update drop status in smart contract
     const redeemer = Data.to(
       {
-        [action === 'approve' ? 'ApproveDrop' : 'RejectDrop']: {
+        [action === "approve" ? "ApproveDrop" : "RejectDrop"]: {
           drop_id: fromText(dropId),
           admin_username: fromText(adminUsername),
-          actual_tokens: action === 'approve' ? BigInt(Math.floor(actualTokens * 1_000_000)) : 0n,
-          notes: fromText(notes || ''),
-          timestamp: BigInt(Date.now())
-        }
+          actual_tokens:
+            action === "approve"
+              ? BigInt(Math.floor(actualTokens * 1_000_000))
+              : 0n,
+          notes: fromText(notes || ""),
+          timestamp: BigInt(Date.now()),
+        },
       },
-      ContractAction
-    )
+      ContractAction,
+    );
 
-    const dropUTXO = await findDropUTXO(dropId)
+    const dropUTXO = await findDropUTXO(dropId);
     if (!dropUTXO) {
-      return res.status(404).json({ error: "Drop UTXO not found" })
+      return res.status(404).json({ error: "Drop UTXO not found" });
     }
 
-    const lucidInstance = await initializeLucid()
+    const lucidInstance = await initializeLucid();
     const tx = await lucidInstance
       .newTx()
       .collectFrom([dropUTXO], redeemer)
@@ -1394,99 +1484,99 @@ app.post("/api/admin/drops/:dropId/review", async (req, res) => {
         type: "PlutusV2",
         script: CONFIG.CONTRACT_SCRIPT,
       })
-      .complete()
+      .complete();
 
-    const signedTx = await tx.sign().complete()
-    const contractTxHash = await signedTx.submit()
+    const signedTx = await tx.sign().complete();
+    const contractTxHash = await signedTx.submit();
 
     res.json({
       success: true,
       dropId,
       action,
       adminUsername,
-      actualTokens: action === 'approve' ? actualTokens : 0,
-      notes: notes || '',
+      actualTokens: action === "approve" ? actualTokens : 0,
+      notes: notes || "",
       payment: paymentResult,
       contractTransaction: contractTxHash,
-      message: `Drop ${action}ed successfully${action === 'approve' ? ' and ADA payment sent' : ''}`
-    })
-
+      message: `Drop ${action}ed successfully${action === "approve" ? " and ADA payment sent" : ""}`,
+    });
   } catch (error) {
-    console.error("Admin review error:", error)
-    res.status(500).json({ error: error.message })
+    console.error("Admin review error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // Batch approve drops with ADA payments
 app.post("/api/admin/drops/batch-approve", async (req, res) => {
   try {
-    const { dropIds, actualTokens, notes, adminUsername } = req.body
+    const { dropIds, actualTokens, notes, adminUsername } = req.body;
 
     if (!dropIds || !Array.isArray(dropIds) || dropIds.length === 0) {
-      return res.status(400).json({ error: "Drop IDs array required" })
+      return res.status(400).json({ error: "Drop IDs array required" });
     }
 
     if (!actualTokens || actualTokens < 0) {
-      return res.status(400).json({ error: "Valid token amount required" })
+      return res.status(400).json({ error: "Valid token amount required" });
     }
 
     if (dropIds.length > 50) {
-      return res.status(400).json({ error: "Maximum 50 drops per batch" })
+      return res.status(400).json({ error: "Maximum 50 drops per batch" });
     }
 
-    const processedDrops = []
-    const errors = []
-    let totalAmount = 0
+    const processedDrops = [];
+    const errors = [];
+    let totalAmount = 0;
 
     // Process each drop
     for (const dropId of dropIds) {
       try {
         // Get drop and user wallet info
-        const dropData = await findDropInContract(dropId)
+        const dropData = await findDropInContract(dropId);
         if (!dropData) {
-          errors.push(`Drop ${dropId}: not found`)
-          continue
+          errors.push(`Drop ${dropId}: not found`);
+          continue;
         }
 
-        const userWallet = await findWalletInContract(dropData.user_id)
+        const userWallet = await findWalletInContract(dropData.user_id);
         if (!userWallet) {
-          errors.push(`Drop ${dropId}: user wallet not found`)
-          continue
+          errors.push(`Drop ${dropId}: user wallet not found`);
+          continue;
         }
 
         // Send ADA payment
-        const lucidInstance = await initializeLucid()
-        const lovelaceAmount = Math.floor(actualTokens * 1_000_000)
-        
+        const lucidInstance = await initializeLucid();
+        const lovelaceAmount = Math.floor(actualTokens * 1_000_000);
+
         const tx = await lucidInstance
           .newTx()
-          .payToAddress(userWallet.consolidated_wallet, { lovelace: BigInt(lovelaceAmount) })
+          .payToAddress(userWallet.consolidated_wallet, {
+            lovelace: BigInt(lovelaceAmount),
+          })
           .attachMetadata(674, {
-            type: 'reloop_batch_reward_payment',
+            type: "reloop_batch_reward_payment",
             drop_id: dropId,
             user_id: dropData.user_id,
             amount_ada: actualTokens,
             admin: adminUsername,
-            batch_timestamp: new Date().toISOString()
+            batch_timestamp: new Date().toISOString(),
           })
-          .complete()
+          .complete();
 
-        const signedTx = await tx.sign().complete()
-        const txHash = await signedTx.submit()
+        const signedTx = await tx.sign().complete();
+        const txHash = await signedTx.submit();
 
         processedDrops.push({
           dropId,
           userId: dropData.user_id,
           recipientAddress: userWallet.consolidated_wallet,
           amount: actualTokens,
-          txHash
-        })
+          txHash,
+        });
 
-        totalAmount += actualTokens
-
+        totalAmount += actualTokens;
       } catch (error) {
-        console.error(`Error processing drop ${dropId}:`, error)
-        errors.push(`Drop ${dropId}: ${error.message}`)
+        console.error(`Error processing drop ${dropId}:`, error);
+        errors.push(`Drop ${dropId}: ${error.message}`);
       }
     }
 
@@ -1496,14 +1586,13 @@ app.post("/api/admin/drops/batch-approve", async (req, res) => {
       totalAmount,
       totalDrops: processedDrops.length,
       errors: errors.length > 0 ? errors : undefined,
-      message: `Successfully processed ${processedDrops.length} drops for ${totalAmount} ADA`
-    })
-
+      message: `Successfully processed ${processedDrops.length} drops for ${totalAmount} ADA`,
+    });
   } catch (error) {
-    console.error("Batch approval error:", error)
-    res.status(500).json({ error: error.message })
+    console.error("Batch approval error:", error);
+    res.status(500).json({ error: error.message });
   }
-})
+});
 
 // =============================================================================
 // HELPER FUNCTIONS FOR DROP MANAGEMENT
@@ -1513,15 +1602,15 @@ async function findDropInContract(dropId) {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
+  const utxos = await response.json();
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, DropDatum)
-        const storedDropId = Buffer.from(datum.drop_id, "hex").toString("utf8")
+        const datum = Data.from(utxo.inline_datum, DropDatum);
+        const storedDropId = Buffer.from(datum.drop_id, "hex").toString("utf8");
 
         if (storedDropId === dropId) {
           return {
@@ -1532,75 +1621,93 @@ async function findDropInContract(dropId) {
             reward_amount: Number(datum.reward_amount),
             claimed: datum.claimed,
             timestamp: Number(datum.timestamp),
-          }
+          };
         }
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return null
+  return null;
 }
 
 async function findDropUTXO(dropId) {
   const response = await fetch(
     `https://cardano-preprod.blockfrost.io/api/v0/addresses/${CONFIG.CONTRACT_ADDRESS}/utxos`,
     { headers: { project_id: process.env.BLOCKFROST_PROJECT_ID } },
-  )
+  );
 
-  const utxos = await response.json()
+  const utxos = await response.json();
 
   for (const utxo of utxos) {
     if (utxo.inline_datum) {
       try {
-        const datum = Data.from(utxo.inline_datum, DropDatum)
-        const storedDropId = Buffer.from(datum.drop_id, "hex").toString("utf8")
+        const datum = Data.from(utxo.inline_datum, DropDatum);
+        const storedDropId = Buffer.from(datum.drop_id, "hex").toString("utf8");
 
         if (storedDropId === dropId) {
-          return utxo
+          return utxo;
         }
       } catch (e) {
-        continue
+        continue;
       }
     }
   }
 
-  return null
+  return null;
 }
 
 // =============================================================================
 // SERVER STARTUP
 // =============================================================================
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Reloop backend running on port ${PORT}`)
-  console.log(`📄 Contract address: ${CONFIG.CONTRACT_ADDRESS ? "configured" : "MISSING"}`)
-  console.log(`💰 Consolidated wallets: ${Object.keys(CONFIG.CONSOLIDATED_WALLETS).length}`)
-  console.log(`🔥 Fireblocks: ${process.env.FIREBLOCKS_API_KEY ? "configured" : "MISSING"}`)
-  console.log(`📱 Device types supported: ${Object.keys(CONFIG.DEVICE_REWARDS).length}`)
-  console.log(`\n🔗 API Endpoints:`)
-  console.log(`   POST /api/users/register - Register user with Fireblocks wallet`)
-  console.log(`   GET  /api/users/:userId/wallet - Get user wallet info`)
-  console.log(`   POST /api/users/:userId/claim - Claim pending rewards`)
-  console.log(`   POST /api/batch/process - Process batch rewards`)
-  console.log(`   GET  /api/batch/history - Get batch history`)
-  console.log(`   POST /api/bins/register - Register new bin`)
-  console.log(`   GET  /api/bins/active - Get active bins`)
-  console.log(`   GET  /api/bins/nearest - Find nearest bins`)
-  console.log(`   POST /api/drops/submit - Submit e-waste drop (with userId)`)
-  console.log(`   GET  /api/drops/history/:userId - Get user drop history`)
-  console.log(`   GET  /api/info/devices - Get device types`)
-  console.log(`   GET  /api/admin/users - Get all users (admin)`)
-  console.log(`   GET  /api/stats - Get platform statistics`)
-  console.log(`\n🎯 NEW FLOW WITH FIREBLOCKS:`)
-  console.log(`   1. User calls POST /api/users/register with { userId: "user123", email: "user@email.com" }`)
-  console.log(`   2. Backend creates Fireblocks wallet and registers address in smart contract`)
-  console.log(`   3. User submits e-waste drop`)
-  console.log(`   4. Smart contract validates and sends ADA directly to user's Fireblocks wallet`)
-  console.log(`   5. User checks balance in Fireblocks app or via GET /api/users/user123/wallet`)
-})
+  console.log(`🚀 Reloop backend running on port ${PORT}`);
+  console.log(
+    `📄 Contract address: ${CONFIG.CONTRACT_ADDRESS ? "configured" : "MISSING"}`,
+  );
+  console.log(
+    `💰 Consolidated wallets: ${Object.keys(CONFIG.CONSOLIDATED_WALLETS).length}`,
+  );
+  console.log(
+    `🔥 Fireblocks: ${process.env.FIREBLOCKS_API_KEY ? "configured" : "MISSING"}`,
+  );
+  console.log(
+    `📱 Device types supported: ${Object.keys(CONFIG.DEVICE_REWARDS).length}`,
+  );
+  console.log(`\n🔗 API Endpoints:`);
+  console.log(
+    `   POST /api/users/register - Register user with Fireblocks wallet`,
+  );
+  console.log(`   GET  /api/users/:userId/wallet - Get user wallet info`);
+  console.log(`   POST /api/users/:userId/claim - Claim pending rewards`);
+  console.log(`   POST /api/batch/process - Process batch rewards`);
+  console.log(`   GET  /api/batch/history - Get batch history`);
+  console.log(`   POST /api/bins/register - Register new bin`);
+  console.log(`   GET  /api/bins/active - Get active bins`);
+  console.log(`   GET  /api/bins/nearest - Find nearest bins`);
+  console.log(`   POST /api/drops/submit - Submit e-waste drop (with userId)`);
+  console.log(`   GET  /api/drops/history/:userId - Get user drop history`);
+  console.log(`   GET  /api/info/devices - Get device types`);
+  console.log(`   GET  /api/admin/users - Get all users (admin)`);
+  console.log(`   GET  /api/stats - Get platform statistics`);
+  console.log(`\n🎯 NEW FLOW WITH FIREBLOCKS:`);
+  console.log(
+    `   1. User calls POST /api/users/register with { userId: "user123", email: "user@email.com" }`,
+  );
+  console.log(
+    `   2. Backend creates Fireblocks wallet and registers address in smart contract`,
+  );
+  console.log(`   3. User submits e-waste drop`);
+  console.log(
+    `   4. Smart contract validates and sends ADA directly to user's Fireblocks wallet`,
+  );
+  console.log(
+    `   5. User checks balance in Fireblocks app or via GET /api/users/user123/wallet`,
+  );
+});
 
-export default app
+export default app;

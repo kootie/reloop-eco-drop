@@ -1,55 +1,55 @@
-import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import { UserService } from '@/lib/supabase'
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { UserService } from "@/lib/supabase";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here'
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { email, password } = body
+    const body = await request.json();
+    const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
-        { success: false, error: 'Email and password are required' },
-        { status: 400 }
-      )
+        { success: false, error: "Email and password are required" },
+        { status: 400 },
+      );
     }
 
     // Find user by email
-    const user = await UserService.findByEmail(email)
-    
+    const user = await UserService.findByEmail(email);
+
     if (!user) {
       return NextResponse.json(
-        { success: false, error: 'Invalid email or password' },
-        { status: 401 }
-      )
+        { success: false, error: "Invalid email or password" },
+        { status: 401 },
+      );
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password_hash)
-    
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+
     if (!isPasswordValid) {
       return NextResponse.json(
-        { success: false, error: 'Invalid email or password' },
-        { status: 401 }
-      )
+        { success: false, error: "Invalid email or password" },
+        { status: 401 },
+      );
     }
 
     // Update last login
-    await UserService.updateLastLogin(user.user_id)
+    await UserService.updateLastLogin(user.user_id);
 
     // Generate JWT token
     const token = jwt.sign(
-      { 
-        userId: user.user_id, 
+      {
+        userId: user.user_id,
         email: user.email,
-        role: 'user'
+        role: "user",
       },
       JWT_SECRET,
-      { expiresIn: '7d' }
-    )
+      { expiresIn: "7d" },
+    );
 
     // Return user data (without password hash)
     return NextResponse.json({
@@ -66,17 +66,16 @@ export async function POST(request: NextRequest) {
         pendingRewardsAda: user.pending_rewards_ada,
         totalDrops: user.total_drops,
         successfulDrops: user.successful_drops,
-        isVerified: user.is_verified
+        isVerified: user.is_verified,
       },
       token,
-      message: 'Login successful'
-    })
-
+      message: "Login successful",
+    });
   } catch (error) {
-    console.error('Login error:', error)
+    console.error("Login error:", error);
     return NextResponse.json(
-      { success: false, error: 'Login failed. Please try again.' },
-      { status: 500 }
-    )
+      { success: false, error: "Login failed. Please try again." },
+      { status: 500 },
+    );
   }
 }

@@ -24,7 +24,7 @@ Simple 5-minute setup to get your database running on Supabase!
 
 1. In your Supabase dashboard, go to **Settings** → **API**
 2. Copy these values:
-   - **Project URL** 
+   - **Project URL**
    - **Project API Key** (anon/public)
 
 ## Step 4: Create Environment File
@@ -44,6 +44,7 @@ NODE_ENV=development
 ```
 
 To generate a JWT secret:
+
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
@@ -209,9 +210,10 @@ CREATE INDEX idx_drops_user_id ON drops(user_id);
 
 ## 🎉 You're Done!
 
-Your Reloop Live app is now running with Supabase! 
+Your Reloop Live app is now running with Supabase!
 
 ### What You Have:
+
 - ✅ User authentication with email/password
 - ✅ Cardano wallet connection
 - ✅ E-waste submission system
@@ -220,6 +222,7 @@ Your Reloop Live app is now running with Supabase!
 - ✅ All data stored in Supabase cloud database
 
 ### Next Steps:
+
 1. **Deploy to Vercel**: Your app will work perfectly on Vercel with Supabase
 2. **Add more device types**: Use the Supabase dashboard to add more e-waste categories
 3. **Customize rewards**: Adjust ADA rewards for different device types
@@ -228,6 +231,7 @@ Your Reloop Live app is now running with Supabase!
 ## 🔧 Environment Variables Summary
 
 Make sure your `.env.local` contains:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -238,15 +242,18 @@ NODE_ENV=development
 ## 🆘 Troubleshooting
 
 **Can't connect to Supabase?**
+
 - Check your URL and API key are correct
 - Make sure environment variables are set
 - Restart your development server
 
 **SQL errors?**
+
 - Make sure you're running the SQL in the correct order
 - Check the Supabase logs for specific error messages
 
 **App won't start?**
+
 - Run `npm install` to ensure all dependencies are installed
 - Check your `.env.local` file exists and has the right variables
 

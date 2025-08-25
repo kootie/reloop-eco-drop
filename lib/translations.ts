@@ -1,156 +1,156 @@
-export type Language = "en" | "ka"
+export type Language = "en" | "ka";
 
 export interface Translations {
   // Common
   common: {
-    back: string
-    cancel: string
-    confirm: string
-    loading: string
-    error: string
-    success: string
-    submit: string
-    continue: string
-    retry: string
-  }
+    back: string;
+    cancel: string;
+    confirm: string;
+    loading: string;
+    error: string;
+    success: string;
+    submit: string;
+    continue: string;
+    retry: string;
+  };
 
   // App branding
   app: {
-    name: string
-    tagline: string
-    walletConnected: string
-  }
+    name: string;
+    tagline: string;
+    walletConnected: string;
+  };
 
   // Authentication
   auth: {
-    welcome: string
-    welcomeDescription: string
-    fullName: string
-    emailAddress: string
-    enterFullName: string
-    enterEmail: string
-    createAccount: string
-    creatingAccount: string
-    walletInfo: string
-    earnInfo: string
-    registrationFailed: string
-    networkError: string
-  }
+    welcome: string;
+    welcomeDescription: string;
+    fullName: string;
+    emailAddress: string;
+    enterFullName: string;
+    enterEmail: string;
+    createAccount: string;
+    creatingAccount: string;
+    walletInfo: string;
+    earnInfo: string;
+    registrationFailed: string;
+    networkError: string;
+  };
 
   // Home page
   home: {
-    findBins: string
-    findBinsDescription: string
-    viewMap: string
-    quickDrop: string
-    quickDropDescription: string
-    startDrop: string
-    readyToMakeDifference: string
-    earnCardanoRewards: string
-    availableInZugdidi: string
-  }
+    findBins: string;
+    findBinsDescription: string;
+    viewMap: string;
+    quickDrop: string;
+    quickDropDescription: string;
+    startDrop: string;
+    readyToMakeDifference: string;
+    earnCardanoRewards: string;
+    availableInZugdidi: string;
+  };
 
   // Map view
   map: {
-    recyclingBins: string
-    findNearest: string
-    myLocation: string
-    locating: string
-    interactiveMap: string
-    showingBins: string
-    yourLocation: string
-    availableBins: string
-    totalDrops: string
-    distance: string
-    coordinates: string
-    selectedBin: string
-    readyToStart: string
-    startDropProcess: string
-    instructions: string
-    instructionSteps: string[]
-  }
+    recyclingBins: string;
+    findNearest: string;
+    myLocation: string;
+    locating: string;
+    interactiveMap: string;
+    showingBins: string;
+    yourLocation: string;
+    availableBins: string;
+    totalDrops: string;
+    distance: string;
+    coordinates: string;
+    selectedBin: string;
+    readyToStart: string;
+    startDropProcess: string;
+    instructions: string;
+    instructionSteps: string[];
+  };
 
   // Drop process
   drop: {
-    dropProcess: string
-    stepOf: string
-    scanQR: string
-    scanQRDescription: string
-    pointCamera: string
-    expectedQR: string
-    simulateQRScan: string
-    scanning: string
-    qrScanned: string
-    takePhoto: string
-    takePhotoDescription: string
-    startCamera: string
-    capturePhoto: string
-    selectItem: string
-    selectItemDescription: string
-    confirmDrop: string
-    reviewDetails: string
-    binLocation: string
-    itemType: string
-    estimatedReward: string
-    photo: string
-    submitAndEarn: string
-    submittingDrop: string
-    youAreHero: string
-    dropSuccessDescription: string
-    rewardEarned: string
-    rewardProcessing: string
-    returnHome: string
-  }
+    dropProcess: string;
+    stepOf: string;
+    scanQR: string;
+    scanQRDescription: string;
+    pointCamera: string;
+    expectedQR: string;
+    simulateQRScan: string;
+    scanning: string;
+    qrScanned: string;
+    takePhoto: string;
+    takePhotoDescription: string;
+    startCamera: string;
+    capturePhoto: string;
+    selectItem: string;
+    selectItemDescription: string;
+    confirmDrop: string;
+    reviewDetails: string;
+    binLocation: string;
+    itemType: string;
+    estimatedReward: string;
+    photo: string;
+    submitAndEarn: string;
+    submittingDrop: string;
+    youAreHero: string;
+    dropSuccessDescription: string;
+    rewardEarned: string;
+    rewardProcessing: string;
+    returnHome: string;
+  };
 
   // Item types
   items: {
-    smartphone: string
-    laptop: string
-    phoneCharger: string
-    headphones: string
-    tablet: string
-    other: string
-    usbCable: string
-    laptopCharger: string
-    hdmiCable: string
-    audioCable: string
-    earbuds: string
-    bluetoothSpeaker: string
-    computerMouse: string
-    keyboard: string
-    remoteControl: string
-    calculator: string
-    basicPhone: string
-    smartwatch: string
-    fitnessTracker: string
-    portableSpeaker: string
-    gamingController: string
-    desktopComputer: string
-    monitor: string
-    printer: string
-    phoneBattery: string
-    laptopBattery: string
-    powerBank: string
-    carBattery: string
-    upsBattery: string
-  }
+    smartphone: string;
+    laptop: string;
+    phoneCharger: string;
+    headphones: string;
+    tablet: string;
+    other: string;
+    usbCable: string;
+    laptopCharger: string;
+    hdmiCable: string;
+    audioCable: string;
+    earbuds: string;
+    bluetoothSpeaker: string;
+    computerMouse: string;
+    keyboard: string;
+    remoteControl: string;
+    calculator: string;
+    basicPhone: string;
+    smartwatch: string;
+    fitnessTracker: string;
+    portableSpeaker: string;
+    gamingController: string;
+    desktopComputer: string;
+    monitor: string;
+    printer: string;
+    phoneBattery: string;
+    laptopBattery: string;
+    powerBank: string;
+    carBattery: string;
+    upsBattery: string;
+  };
 
   // Locations
   locations: {
-    kikalisviliBin: string
-    kikalisviliAddress: string
-    tradeCenterMall: string
-    tradeCenterAddress: string
-  }
+    kikalisviliBin: string;
+    kikalisviliAddress: string;
+    tradeCenterMall: string;
+    tradeCenterAddress: string;
+  };
 
   // Rewards
   rewards: {
-    cablesChargers: string
-    smallElectronics: string
-    mediumElectronics: string
-    largeElectronics: string
-    batteriesHazardous: string
-  }
+    cablesChargers: string;
+    smallElectronics: string;
+    mediumElectronics: string;
+    largeElectronics: string;
+    batteriesHazardous: string;
+  };
 }
 
 export const translations: Record<Language, Translations> = {
@@ -173,7 +173,8 @@ export const translations: Record<Language, Translations> = {
     },
     auth: {
       welcome: "Welcome to Reloop",
-      welcomeDescription: "Join the e-waste recycling revolution and earn Cardano rewards",
+      welcomeDescription:
+        "Join the e-waste recycling revolution and earn Cardano rewards",
       fullName: "Full Name",
       emailAddress: "Email Address",
       enterFullName: "Enter your full name",
@@ -187,7 +188,8 @@ export const translations: Record<Language, Translations> = {
     },
     home: {
       findBins: "Find Recycling Bins",
-      findBinsDescription: "Locate the nearest e-waste recycling bin in Zugdidi",
+      findBinsDescription:
+        "Locate the nearest e-waste recycling bin in Zugdidi",
       viewMap: "View Map",
       quickDrop: "Quick Drop",
       quickDropDescription: "Scan QR code and drop your e-waste to earn ADA",
@@ -198,7 +200,8 @@ export const translations: Record<Language, Translations> = {
     },
     map: {
       recyclingBins: "Recycling Bins",
-      findNearest: "Find the nearest recycling bin and start earning ADA rewards",
+      findNearest:
+        "Find the nearest recycling bin and start earning ADA rewards",
       myLocation: "My Location",
       locating: "Locating...",
       interactiveMap: "Interactive Map",
@@ -230,7 +233,8 @@ export const translations: Record<Language, Translations> = {
       scanning: "Scanning...",
       qrScanned: "QR Code scanned successfully!",
       takePhoto: "Take Photo",
-      takePhotoDescription: "Take a clear photo of the e-waste item you're dropping",
+      takePhotoDescription:
+        "Take a clear photo of the e-waste item you're dropping",
       startCamera: "Start Camera",
       capturePhoto: "Capture Photo",
       selectItem: "Select Item Type",
@@ -244,9 +248,11 @@ export const translations: Record<Language, Translations> = {
       submitAndEarn: "Submit Drop & Earn Reward",
       submittingDrop: "Submitting Drop...",
       youAreHero: "You are a hero!",
-      dropSuccessDescription: "Your e-waste drop has been successfully submitted",
+      dropSuccessDescription:
+        "Your e-waste drop has been successfully submitted",
       rewardEarned: "Reward Earned",
-      rewardProcessing: "Your reward will be processed and added to your Cardano wallet shortly.",
+      rewardProcessing:
+        "Your reward will be processed and added to your Cardano wallet shortly.",
       returnHome: "Return to Home",
     },
     items: {
@@ -313,7 +319,8 @@ export const translations: Record<Language, Translations> = {
     },
     auth: {
       welcome: "კეთილი იყოს თქვენი მობრძანება Reloop-ში",
-      welcomeDescription: "შეუერთდით ელექტრონული ნარჩენების გადამუშავების რევოლუციას და მიიღეთ Cardano ჯილდოები",
+      welcomeDescription:
+        "შეუერთდით ელექტრონული ნარჩენების გადამუშავების რევოლუციას და მიიღეთ Cardano ჯილდოები",
       fullName: "სრული სახელი",
       emailAddress: "ელ-ფოსტის მისამართი",
       enterFullName: "შეიყვანეთ თქვენი სრული სახელი",
@@ -327,18 +334,22 @@ export const translations: Record<Language, Translations> = {
     },
     home: {
       findBins: "გადამუშავების ურნების პოვნა",
-      findBinsDescription: "იპოვეთ უახლოესი ელექტრონული ნარჩენების გადამუშავების ურნა ზუგდიდში",
+      findBinsDescription:
+        "იპოვეთ უახლოესი ელექტრონული ნარჩენების გადამუშავების ურნა ზუგდიდში",
       viewMap: "რუკის ნახვა",
       quickDrop: "სწრაფი ჩაგდება",
-      quickDropDescription: "დაასკანირეთ QR კოდი და ჩაგდეთ ელექტრონული ნარჩენები ADA-ს მისაღებად",
+      quickDropDescription:
+        "დაასკანირეთ QR კოდი და ჩაგდეთ ელექტრონული ნარჩენები ADA-ს მისაღებად",
       startDrop: "ჩაგდების დაწყება",
       readyToMakeDifference: "მზად ხართ ცვლილებისთვის?",
-      earnCardanoRewards: "ჩაგდეთ ელექტრონული ნარჩენები და მიიღეთ Cardano ჯილდოები!",
+      earnCardanoRewards:
+        "ჩაგდეთ ელექტრონული ნარჩენები და მიიღეთ Cardano ჯილდოები!",
       availableInZugdidi: "ხელმისაწვდომია ზუგდიდში",
     },
     map: {
       recyclingBins: "გადამუშავების ურნები",
-      findNearest: "იპოვეთ უახლოესი გადამუშავების ურნა და დაიწყეთ ADA ჯილდოების მიღება",
+      findNearest:
+        "იპოვეთ უახლოესი გადამუშავების ურნა და დაიწყეთ ADA ჯილდოების მიღება",
       myLocation: "ჩემი მდებარეობა",
       locating: "მდებარეობის განსაზღვრა...",
       interactiveMap: "ინტერაქტიული რუკა",
@@ -370,7 +381,8 @@ export const translations: Record<Language, Translations> = {
       scanning: "სკანირება...",
       qrScanned: "QR კოდი წარმატებით დასკანირდა!",
       takePhoto: "ფოტოს გადაღება",
-      takePhotoDescription: "გადაუღეთ მკაფიო ფოტო ელექტრონულ ნარჩენს, რომელსაც აგდებთ",
+      takePhotoDescription:
+        "გადაუღეთ მკაფიო ფოტო ელექტრონულ ნარჩენს, რომელსაც აგდებთ",
       startCamera: "კამერის ჩართვა",
       capturePhoto: "ფოტოს გადაღება",
       selectItem: "ნივთის ტიპის არჩევა",
@@ -384,9 +396,11 @@ export const translations: Record<Language, Translations> = {
       submitAndEarn: "ჩაგდება და ჯილდოს მიღება",
       submittingDrop: "ჩაგდება იგზავნება...",
       youAreHero: "თქვენ ხართ გმირი!",
-      dropSuccessDescription: "თქვენი ელექტრონული ნარჩენების ჩაგდება წარმატებით გაიგზავნა",
+      dropSuccessDescription:
+        "თქვენი ელექტრონული ნარჩენების ჩაგდება წარმატებით გაიგზავნა",
       rewardEarned: "მიღებული ჯილდო",
-      rewardProcessing: "თქვენი ჯილდო დამუშავდება და მალე დაემატება თქვენს Cardano საფულეს.",
+      rewardProcessing:
+        "თქვენი ჯილდო დამუშავდება და მალე დაემატება თქვენს Cardano საფულეს.",
       returnHome: "მთავარ გვერდზე დაბრუნება",
     },
     items: {
@@ -434,4 +448,4 @@ export const translations: Record<Language, Translations> = {
       batteriesHazardous: "ბატარეები და საშიში (7 ADA)",
     },
   },
-}
+};

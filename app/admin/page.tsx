@@ -1,37 +1,43 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Shield, Eye, EyeOff } from "lucide-react"
-import AdminDashboard from "@/components/admin-dashboard"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Shield, Eye, EyeOff } from "lucide-react";
+import AdminDashboard from "@/components/admin-dashboard";
 
 interface Admin {
-  username: string
-  role: string
-  token: string
+  username: string;
+  role: string;
+  token: string;
 }
 
 export default function AdminPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [admin, setAdmin] = useState<Admin | null>(null)
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [isMounted, setIsMounted] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [admin, setAdmin] = useState<Admin | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true)
-  }, [])
+    setIsMounted(true);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
       const response = await fetch("/api/admin/login", {
@@ -40,37 +46,37 @@ export default function AdminPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ username, password }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        setAdmin(data.admin)
-        setIsAuthenticated(true)
+        setAdmin(data.admin);
+        setIsAuthenticated(true);
       } else {
-        setError(data.error || "Login failed")
+        setError(data.error || "Login failed");
       }
     } catch {
-      setError("Network error. Please try again.")
+      setError("Network error. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleLogout = () => {
-    setIsAuthenticated(false)
-    setAdmin(null)
-    setUsername("")
-    setPassword("")
-    setError("")
-  }
+    setIsAuthenticated(false);
+    setAdmin(null);
+    setUsername("");
+    setPassword("");
+    setError("");
+  };
 
   if (!isMounted) {
-    return null
+    return null;
   }
 
   if (isAuthenticated && admin) {
-    return <AdminDashboard admin={admin} onLogout={handleLogout} />
+    return <AdminDashboard admin={admin} onLogout={handleLogout} />;
   }
 
   return (
@@ -133,24 +139,30 @@ export default function AdminPage() {
                 {error}
               </div>
             )}
-            <Button 
-              type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700" 
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-          
+
           <div className="mt-6 p-4 bg-blue-50 rounded-md border border-blue-200">
-            <h4 className="font-semibold text-blue-800 mb-2">Demo Credentials</h4>
+            <h4 className="font-semibold text-blue-800 mb-2">
+              Demo Credentials
+            </h4>
             <div className="text-sm text-blue-600 space-y-1">
-              <p><strong>Username:</strong> admin</p>
-              <p><strong>Password:</strong> reloop2024!</p>
+              <p>
+                <strong>Username:</strong> admin
+              </p>
+              <p>
+                <strong>Password:</strong> reloop2024!
+              </p>
             </div>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

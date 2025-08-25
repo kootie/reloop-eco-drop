@@ -1,14 +1,20 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { 
-  CheckCircle2, 
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  CheckCircle2,
   Eye,
   User,
   Wallet,
@@ -18,192 +24,208 @@ import {
   CheckSquare,
   Square,
   Loader2,
-  Users
-} from "lucide-react"
+  Users,
+} from "lucide-react";
 
 interface PendingSubmission {
-  id: string
-  dropId: string
-  userId: string
-  userEmail: string
-  userFullName: string
-  userCardanoAddress?: string
-  deviceType: string
-  deviceName: string
-  deviceCategory: string
-  estimatedRewardAda: number
-  actualWeightKg?: number
-  photo: string
-  submittedAt: string
-  binLocation: string
+  id: string;
+  dropId: string;
+  userId: string;
+  userEmail: string;
+  userFullName: string;
+  userCardanoAddress?: string;
+  deviceType: string;
+  deviceName: string;
+  deviceCategory: string;
+  estimatedRewardAda: number;
+  actualWeightKg?: number;
+  photo: string;
+  submittedAt: string;
+  binLocation: string;
   userLocation: {
-    latitude: number
-    longitude: number
-  }
-  distance: number
+    latitude: number;
+    longitude: number;
+  };
+  distance: number;
 }
 
 interface AdminVerificationProps {
   admin: {
-    username: string
-    role: string
-    token: string
-  }
+    username: string;
+    role: string;
+    token: string;
+  };
 }
 
 export default function AdminVerification({ admin }: AdminVerificationProps) {
-  const [pendingSubmissions, setPendingSubmissions] = useState<PendingSubmission[]>([])
-  const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set())
-  const [isLoading, setIsLoading] = useState(true)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [selectedSubmission, setSelectedSubmission] = useState<PendingSubmission | null>(null)
-  const [batchNotes, setBatchNotes] = useState("")
-  const [filter, setFilter] = useState<'all' | 'verified-users' | 'unverified-users'>('all')
+  const [pendingSubmissions, setPendingSubmissions] = useState<
+    PendingSubmission[]
+  >([]);
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(
+    new Set(),
+  );
+  const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedSubmission, setSelectedSubmission] =
+    useState<PendingSubmission | null>(null);
+  const [batchNotes, setBatchNotes] = useState("");
+  const [filter, setFilter] = useState<
+    "all" | "verified-users" | "unverified-users"
+  >("all");
 
   const loadPendingSubmissions = useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const url = filter === 'all' 
-        ? '/api/admin/submissions/pending'
-        : `/api/admin/submissions/pending?userFilter=${filter}`
-      
+      const url =
+        filter === "all"
+          ? "/api/admin/submissions/pending"
+          : `/api/admin/submissions/pending?userFilter=${filter}`;
+
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${admin.token}`
-        }
-      })
-      
-      const data = await response.json()
-      
+          Authorization: `Bearer ${admin.token}`,
+        },
+      });
+
+      const data = await response.json();
+
       if (data.success) {
-        setPendingSubmissions(data.submissions)
+        setPendingSubmissions(data.submissions);
       } else {
-        console.error('Failed to load submissions:', data.error)
+        console.error("Failed to load submissions:", data.error);
       }
     } catch (error) {
-      console.error('Error loading submissions:', error)
+      console.error("Error loading submissions:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [filter, admin.token])
+  }, [filter, admin.token]);
 
   useEffect(() => {
-    loadPendingSubmissions()
-  }, [loadPendingSubmissions])
+    loadPendingSubmissions();
+  }, [loadPendingSubmissions]);
 
   const toggleSubmissionSelection = (submissionId: string) => {
-    const newSelection = new Set(selectedSubmissions)
+    const newSelection = new Set(selectedSubmissions);
     if (newSelection.has(submissionId)) {
-      newSelection.delete(submissionId)
+      newSelection.delete(submissionId);
     } else {
-      newSelection.add(submissionId)
+      newSelection.add(submissionId);
     }
-    setSelectedSubmissions(newSelection)
-  }
+    setSelectedSubmissions(newSelection);
+  };
 
   const selectAllSubmissions = () => {
     if (selectedSubmissions.size === pendingSubmissions.length) {
-      setSelectedSubmissions(new Set())
+      setSelectedSubmissions(new Set());
     } else {
-      setSelectedSubmissions(new Set(pendingSubmissions.map(s => s.id)))
+      setSelectedSubmissions(new Set(pendingSubmissions.map((s) => s.id)));
     }
-  }
+  };
 
   const processBatchApproval = async () => {
     if (selectedSubmissions.size === 0) {
-      alert('Please select at least one submission to approve')
-      return
+      alert("Please select at least one submission to approve");
+      return;
     }
 
     const confirmed = window.confirm(
-      `Are you sure you want to approve ${selectedSubmissions.size} submissions and process ADA payments?`
-    )
-    
-    if (!confirmed) return
+      `Are you sure you want to approve ${selectedSubmissions.size} submissions and process ADA payments?`,
+    );
 
-    setIsProcessing(true)
+    if (!confirmed) return;
+
+    setIsProcessing(true);
     try {
-      const selectedSubmissionsList = pendingSubmissions.filter(s => selectedSubmissions.has(s.id))
-      
+      const selectedSubmissionsList = pendingSubmissions.filter((s) =>
+        selectedSubmissions.has(s.id),
+      );
+
       const requestBody = {
-        submissions: selectedSubmissionsList.map(s => ({
+        submissions: selectedSubmissionsList.map((s) => ({
           dropId: s.dropId,
           userId: s.userId,
           actualRewardAda: s.estimatedRewardAda, // Use estimated as actual for batch approval
-          actualWeightKg: s.actualWeightKg || 1.0
+          actualWeightKg: s.actualWeightKg || 1.0,
         })),
         batchNotes,
-        adminUsername: admin.username
-      }
-      
-      const response = await fetch('/api/admin/submissions/batch-approve', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${admin.token}`
-        },
-        body: JSON.stringify(requestBody)
-      })
+        adminUsername: admin.username,
+      };
 
-      const data = await response.json()
-      
+      const response = await fetch("/api/admin/submissions/batch-approve", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${admin.token}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
       if (data.success) {
-        alert(`Successfully approved ${data.processedCount} submissions and processed ${data.totalAda} ADA in payments!`)
-        
+        alert(
+          `Successfully approved ${data.processedCount} submissions and processed ${data.totalAda} ADA in payments!`,
+        );
+
         // Refresh the list
-        await loadPendingSubmissions()
-        setSelectedSubmissions(new Set())
-        setBatchNotes("")
+        await loadPendingSubmissions();
+        setSelectedSubmissions(new Set());
+        setBatchNotes("");
       } else {
-        alert(`Batch processing failed: ${data.error}`)
+        alert(`Batch processing failed: ${data.error}`);
       }
     } catch (error) {
-      console.error('Batch processing error:', error)
-      alert('Network error during batch processing')
+      console.error("Batch processing error:", error);
+      alert("Network error during batch processing");
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const getTotalRewardForSelected = () => {
     return pendingSubmissions
-      .filter(s => selectedSubmissions.has(s.id))
-      .reduce((total, s) => total + s.estimatedRewardAda, 0)
-  }
+      .filter((s) => selectedSubmissions.has(s.id))
+      .reduce((total, s) => total + s.estimatedRewardAda, 0);
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    return new Date(dateString).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const getDeviceTypeBadge = (category: string) => {
     const categoryColors: { [key: string]: string } = {
-      'Cables & Chargers': 'bg-blue-100 text-blue-800',
-      'Small Electronics': 'bg-green-100 text-green-800', 
-      'Medium Electronics': 'bg-yellow-100 text-yellow-800',
-      'Large Electronics': 'bg-orange-100 text-orange-800',
-      'Batteries & Hazardous': 'bg-red-100 text-red-800'
-    }
-    
+      "Cables & Chargers": "bg-blue-100 text-blue-800",
+      "Small Electronics": "bg-green-100 text-green-800",
+      "Medium Electronics": "bg-yellow-100 text-yellow-800",
+      "Large Electronics": "bg-orange-100 text-orange-800",
+      "Batteries & Hazardous": "bg-red-100 text-red-800",
+    };
+
     return (
-      <Badge className={categoryColors[category] || 'bg-gray-100 text-gray-800'}>
+      <Badge
+        className={categoryColors[category] || "bg-gray-100 text-gray-800"}
+      >
         {category}
       </Badge>
-    )
-  }
+    );
+  };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-blue-600">Loading pending submissions...</span>
+        <span className="ml-2 text-blue-600">
+          Loading pending submissions...
+        </span>
       </div>
-    )
+    );
   }
 
   return (
@@ -216,7 +238,8 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
             E-Waste Submission Verification
           </CardTitle>
           <CardDescription>
-            Review and approve user submissions for ADA rewards. Use checkboxes for batch processing.
+            Review and approve user submissions for ADA rewards. Use checkboxes
+            for batch processing.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -225,22 +248,22 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant={filter === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilter('all')}
+                variant={filter === "all" ? "default" : "outline"}
+                onClick={() => setFilter("all")}
               >
                 All Users ({pendingSubmissions.length})
               </Button>
               <Button
                 size="sm"
-                variant={filter === 'verified-users' ? 'default' : 'outline'}
-                onClick={() => setFilter('verified-users')}
+                variant={filter === "verified-users" ? "default" : "outline"}
+                onClick={() => setFilter("verified-users")}
               >
                 Verified Users Only
               </Button>
               <Button
                 size="sm"
-                variant={filter === 'unverified-users' ? 'default' : 'outline'}
-                onClick={() => setFilter('unverified-users')}
+                variant={filter === "unverified-users" ? "default" : "outline"}
+                onClick={() => setFilter("unverified-users")}
               >
                 Unverified Users
               </Button>
@@ -261,10 +284,14 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                 )}
                 Select All
               </Button>
-              
+
               {selectedSubmissions.size > 0 && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {selectedSubmissions.size} selected • {getTotalRewardForSelected().toFixed(2)} ADA
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-100 text-blue-800"
+                >
+                  {selectedSubmissions.size} selected •{" "}
+                  {getTotalRewardForSelected().toFixed(2)} ADA
                 </Badge>
               )}
             </div>
@@ -287,7 +314,7 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                     rows={2}
                   />
                 </div>
-                
+
                 <Button
                   onClick={processBatchApproval}
                   disabled={isProcessing}
@@ -301,7 +328,8 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                   ) : (
                     <>
                       <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Approve {selectedSubmissions.size} Submissions & Process ADA ({getTotalRewardForSelected().toFixed(2)} ADA)
+                      Approve {selectedSubmissions.size} Submissions & Process
+                      ADA ({getTotalRewardForSelected().toFixed(2)} ADA)
                     </>
                   )}
                 </Button>
@@ -324,7 +352,9 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
             <div className="text-center py-8">
               <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
               <p className="text-gray-600">No pending submissions found</p>
-              <p className="text-sm text-gray-500 mt-1">All submissions have been reviewed</p>
+              <p className="text-sm text-gray-500 mt-1">
+                All submissions have been reviewed
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -332,9 +362,9 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                 <div
                   key={submission.id}
                   className={`border rounded-lg p-4 transition-colors ${
-                    selectedSubmissions.has(submission.id) 
-                      ? 'border-blue-300 bg-blue-50' 
-                      : 'border-gray-200 hover:bg-gray-50'
+                    selectedSubmissions.has(submission.id)
+                      ? "border-blue-300 bg-blue-50"
+                      : "border-gray-200 hover:bg-gray-50"
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -366,10 +396,11 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4" />
                           <span>
-                            <strong>{submission.userFullName}</strong> ({submission.userEmail})
+                            <strong>{submission.userFullName}</strong> (
+                            {submission.userEmail})
                           </span>
                         </div>
-                        
+
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
                           <span>{formatDate(submission.submittedAt)}</span>
@@ -383,19 +414,24 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                         {submission.userCardanoAddress ? (
                           <div className="flex items-center gap-2">
                             <Wallet className="w-4 h-4 text-green-600" />
-                            <span className="text-green-600">Wallet Connected</span>
+                            <span className="text-green-600">
+                              Wallet Connected
+                            </span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4 text-orange-500" />
-                            <span className="text-orange-600">No Wallet Connected</span>
+                            <span className="text-orange-600">
+                              No Wallet Connected
+                            </span>
                           </div>
                         )}
                       </div>
 
                       {submission.userCardanoAddress && (
                         <div className="text-xs text-gray-500 mb-2">
-                          <span className="font-medium">Wallet:</span> {submission.userCardanoAddress.substring(0, 20)}...
+                          <span className="font-medium">Wallet:</span>{" "}
+                          {submission.userCardanoAddress.substring(0, 20)}...
                         </div>
                       )}
                     </div>
@@ -429,7 +465,8 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                 Submission Details - Drop #{selectedSubmission.dropId}
               </CardTitle>
               <CardDescription>
-                Submitted by {selectedSubmission.userFullName} on {formatDate(selectedSubmission.submittedAt)}
+                Submitted by {selectedSubmission.userFullName} on{" "}
+                {formatDate(selectedSubmission.submittedAt)}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -449,24 +486,42 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
               {/* User Info */}
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700">User</Label>
-                  <p className="text-gray-600">{selectedSubmission.userFullName}</p>
-                  <p className="text-sm text-gray-500">{selectedSubmission.userEmail}</p>
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-semibold text-gray-700">Device</Label>
-                  <p className="text-gray-600">{selectedSubmission.deviceName}</p>
-                  <p className="text-sm text-gray-500">{selectedSubmission.deviceCategory}</p>
-                </div>
-
-                <div>
-                  <Label className="text-sm font-semibold text-gray-700">Estimated Reward</Label>
-                  <p className="text-gray-600">{selectedSubmission.estimatedRewardAda} ADA</p>
+                  <Label className="text-sm font-semibold text-gray-700">
+                    User
+                  </Label>
+                  <p className="text-gray-600">
+                    {selectedSubmission.userFullName}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {selectedSubmission.userEmail}
+                  </p>
                 </div>
 
                 <div>
-                  <Label className="text-sm font-semibold text-gray-700">Wallet Status</Label>
+                  <Label className="text-sm font-semibold text-gray-700">
+                    Device
+                  </Label>
+                  <p className="text-gray-600">
+                    {selectedSubmission.deviceName}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {selectedSubmission.deviceCategory}
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">
+                    Estimated Reward
+                  </Label>
+                  <p className="text-gray-600">
+                    {selectedSubmission.estimatedRewardAda} ADA
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-semibold text-gray-700">
+                    Wallet Status
+                  </Label>
                   {selectedSubmission.userCardanoAddress ? (
                     <div>
                       <p className="text-green-600 flex items-center gap-1">
@@ -495,18 +550,18 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
                 </Button>
                 <Button
                   onClick={() => {
-                    toggleSubmissionSelection(selectedSubmission.id)
-                    setSelectedSubmission(null)
+                    toggleSubmissionSelection(selectedSubmission.id);
+                    setSelectedSubmission(null);
                   }}
-                  className={selectedSubmissions.has(selectedSubmission.id) 
-                    ? "bg-gray-600 hover:bg-gray-700" 
-                    : "bg-blue-600 hover:bg-blue-700"
+                  className={
+                    selectedSubmissions.has(selectedSubmission.id)
+                      ? "bg-gray-600 hover:bg-gray-700"
+                      : "bg-blue-600 hover:bg-blue-700"
                   }
                 >
-                  {selectedSubmissions.has(selectedSubmission.id) 
-                    ? "Remove from Selection" 
-                    : "Add to Selection"
-                  }
+                  {selectedSubmissions.has(selectedSubmission.id)
+                    ? "Remove from Selection"
+                    : "Add to Selection"}
                 </Button>
               </div>
             </CardContent>
@@ -514,5 +569,5 @@ export default function AdminVerification({ admin }: AdminVerificationProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
