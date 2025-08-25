@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { UserService } from "@/lib/supabase";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "your-secret-key-here";
 
 export async function POST(request: NextRequest) {
   try {

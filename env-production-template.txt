@@ -7,6 +7,11 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
+# Authentication (JWT)
+JWT_SECRET=your_jwt_secret_key_here
+NEXTAUTH_SECRET=your_nextauth_secret_key
+NEXTAUTH_URL=https://your-domain.vercel.app
+
 # Cardano Blockchain Configuration
 NEXT_PUBLIC_CARDANO_NETWORK=mainnet
 BACKEND_WALLET_SEED=your_backend_wallet_seed_phrase
@@ -22,14 +27,17 @@ NEXT_PUBLIC_APP_NAME=Reloop Live
 NEXT_PUBLIC_APP_VERSION=1.0.0
 NEXT_PUBLIC_APP_ENVIRONMENT=production
 
-# Security
-NEXTAUTH_SECRET=your_nextauth_secret_key
-NEXTAUTH_URL=https://your-domain.vercel.app
-
 # Optional: Analytics and Monitoring
 # NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=your_ga_id
 # NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 
 # =============================================================================
 # IMPORTANT: Replace all placeholder values with actual production credentials
+# =============================================================================
+# 
+# CRITICAL: Make sure to set JWT_SECRET to a strong, random string
+# Example: JWT_SECRET=your-super-secure-random-string-here-32-chars-minimum
+# 
+# You can generate a secure JWT secret using:
+# node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 # =============================================================================

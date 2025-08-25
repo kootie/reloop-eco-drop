@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { getSupabaseClient } from "@/lib/supabase";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
+const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || "your-secret-key-here";
 
 interface AuthToken {
   userId: string;
