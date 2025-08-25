@@ -5,8 +5,7 @@ const http = require('http');
 
 // Configuration
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 
-                 process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                 'http://localhost:3000';
+                 'https://reloop-eco-drop.vercel.app';
 const OUTPUT_DIR = './qr-codes';
 
 // List of existing QR codes from your system

@@ -70,14 +70,14 @@ export default function QRCodeGenerator() {
   };
 
   const generateQRCode = (qrCode: string) => {
-    // Use window.location.origin to get the current domain
-    const baseUrl = window.location.origin;
+    // Use custom domain for QR code generation
+    const baseUrl = "https://reloop-eco-drop.vercel.app";
     return `${baseUrl}/api/bins/qr/generate?qrCode=${encodeURIComponent(qrCode)}`;
   };
 
   const getPublicBinUrl = (qrCode: string) => {
-    // Use window.location.origin to get the current domain
-    const baseUrl = window.location.origin;
+    // Use custom domain for public bin URLs
+    const baseUrl = "https://reloop-eco-drop.vercel.app";
     return `${baseUrl}/bin/${encodeURIComponent(qrCode)}`;
   };
 
