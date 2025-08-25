@@ -16,7 +16,7 @@ interface RiskLevel {
   materials: string
   examples: string[]
   disposal: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   color: string
   bgColor: string
 }
@@ -81,7 +81,7 @@ const riskLevels: RiskLevel[] = [
 
 export default function GuidelinesPage() {
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null)
-  const { t, isHydrated } = useTranslation()
+  const { isHydrated } = useTranslation()
 
   if (!isHydrated) {
     return (

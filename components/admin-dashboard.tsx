@@ -437,7 +437,7 @@ export default function AdminDashboard({ admin, onLogout }: AdminDashboardProps)
 
         {/* Treasury Management Tab */}
         {activeTab === 'treasury' && (
-          <TreasuryManagement adminId={admin.id} />
+          <TreasuryManagement adminId={admin.username} />
         )}
 
         {activeTab === 'stats' && (

@@ -142,7 +142,7 @@ export default function AuthScreen({ onAuth }: AuthScreenProps) {
       } else {
         setError(data.error || `${isLoginMode ? 'Login' : 'Registration'} failed`)
       }
-    } catch (err) {
+    } catch {
       setError("Network error. Please try again.")
     } finally {
       setIsLoading(false)

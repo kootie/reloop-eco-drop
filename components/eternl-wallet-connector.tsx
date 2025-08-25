@@ -11,7 +11,12 @@ declare global {
   interface Window {
     cardano?: {
       eternl?: {
-        enable(): Promise<any>
+        enable(): Promise<{
+          getUsedAddresses(): Promise<string[]>
+          getUnusedAddresses(): Promise<string[]>
+          getNetworkId(): Promise<number>
+          getBalance(): Promise<string>
+        }>
         isEnabled(): Promise<boolean>
         getBalance(): Promise<string>
         getUsedAddresses(): Promise<string[]>
@@ -19,7 +24,12 @@ declare global {
         getNetworkId(): Promise<number>
         signTx(tx: string): Promise<string>
         submitTx(tx: string): Promise<string>
-        getUtxos(): Promise<any[]>
+        getUtxos(): Promise<Array<{
+          txHash: string
+          outputIndex: number
+          amount: string
+          address: string
+        }>>
       }
     }
   }
@@ -120,9 +130,9 @@ export default function EternlWalletConnector({
       
       console.log('Eternl wallet connected:', walletData)
       
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to connect wallet:', err)
-      setError(err.message || 'Failed to connect to Eternl wallet')
+      setError(err instanceof Error ? err.message : 'Failed to connect to Eternl wallet')
     } finally {
       setIsConnecting(false)
     }

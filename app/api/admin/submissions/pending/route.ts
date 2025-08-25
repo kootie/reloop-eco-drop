@@ -122,16 +122,16 @@ export async function GET(request: NextRequest) {
       deviceType: row.device_type_id || 'UNKNOWN',
       deviceName: row.device_type_id || 'Unknown Device',
       deviceCategory: 'Small Electronics', // Default category
-      estimatedRewardAda: parseFloat(row.estimated_reward_ada || 0),
-      actualWeightKg: row.actual_weight_kg ? parseFloat(row.actual_weight_kg) : null,
+      estimatedRewardAda: parseFloat(String(row.estimated_reward_ada || 0)),
+      actualWeightKg: row.actual_weight_kg ? parseFloat(String(row.actual_weight_kg)) : null,
       photo: row.photo_url,
       submittedAt: row.created_at,
       binLocation: `Bin ${row.bin_id?.substring(0, 8) || 'Unknown'}`,
       userLocation: {
-        latitude: parseFloat(row.user_latitude || 0),
-        longitude: parseFloat(row.user_longitude || 0)
+        latitude: parseFloat(String(row.user_latitude || 0)),
+        longitude: parseFloat(String(row.user_longitude || 0))
       },
-      distance: parseFloat(row.distance_to_bin_meters || 0)
+      distance: parseFloat(String(row.distance_to_bin_meters || 0))
     }))
 
     return NextResponse.json({

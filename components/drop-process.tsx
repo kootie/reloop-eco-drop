@@ -20,7 +20,7 @@ interface BinLocation {
 }
 
 interface DropProcessProps {
-  user: { userId: string; email: string; cardanoAddress: string }
+  user: { userId: string; email: string; cardanoAddress?: string }
   selectedBin: BinLocation | null
   onBack: () => void
   onComplete: () => void
@@ -36,15 +36,7 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
-  const [deviceTypes, setDeviceTypes] = useState<{
-    success: boolean
-    devices?: Array<{
-      id: string
-      device_name: string
-      category: string
-      reward_ada: number
-    }>
-  } | null>(null)
+
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -54,7 +46,6 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
   useEffect(() => {
     if (!isHydrated) return
     
-    loadDeviceTypes()
     getCurrentUserLocation()
 
     return () => {
@@ -72,17 +63,7 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
     )
   }
 
-  const loadDeviceTypes = async () => {
-    try {
-      const response = await fetch("/api/info/devices")
-      const data = await response.json()
-      if (data.success) {
-        setDeviceTypes(data)
-      }
-    } catch (error) {
-      console.error("Failed to load device types:", error)
-    }
-  }
+
 
   const getCurrentUserLocation = () => {
     if (navigator.geolocation) {
@@ -113,12 +94,7 @@ export default function DropProcess({ user, selectedBin, onBack, onComplete }: D
 
 
 
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop())
-      streamRef.current = null
-    }
-  }
+
 
 
 

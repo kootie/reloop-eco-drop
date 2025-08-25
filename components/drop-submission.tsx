@@ -26,7 +26,7 @@ interface User {
 interface DropSubmissionProps {
   bin: BinLocation
   user: User
-  onSuccess?: (drop: any) => void
+  onSuccess?: (drop: { dropId: string; status: string; estimatedRewardAda: number }) => void
   onCancel?: () => void
 }
 
@@ -77,7 +77,7 @@ export default function DropSubmission({ bin, user, onSuccess, onCancel }: DropS
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [errorMessage, setErrorMessage] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const { t, isHydrated } = useTranslation()
+  const { isHydrated } = useTranslation()
 
   if (!isHydrated) {
     return (
@@ -142,7 +142,7 @@ export default function DropSubmission({ bin, user, onSuccess, onCancel }: DropS
         setSubmitStatus('error')
         setErrorMessage(data.error || 'Failed to submit drop')
       }
-    } catch (error) {
+    } catch {
       setSubmitStatus('error')
       setErrorMessage('Network error. Please try again.')
     } finally {

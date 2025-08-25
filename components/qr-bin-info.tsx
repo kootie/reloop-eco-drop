@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -91,9 +91,9 @@ export default function QRBinInfo({ qrCode, onStartDrop }: QRBinInfoProps) {
   useEffect(() => {
     setIsMounted(true)
     fetchBinInfo()
-  }, [qrCode])
+  }, [qrCode, fetchBinInfo])
 
-  const fetchBinInfo = async () => {
+  const fetchBinInfo = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -106,12 +106,12 @@ export default function QRBinInfo({ qrCode, onStartDrop }: QRBinInfoProps) {
       } else {
         setError(data.error || 'Failed to load bin information')
       }
-    } catch (err) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
     }
-  }
+  }, [qrCode])
 
   if (!isMounted || loading) {
     return (

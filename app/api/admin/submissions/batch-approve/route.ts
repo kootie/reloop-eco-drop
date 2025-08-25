@@ -119,9 +119,9 @@ export async function POST(request: NextRequest) {
         processedUsers.add(submission.userId)
         totalAda += submission.actualRewardAda
 
-      } catch (error) {
-        console.error(`Error processing submission ${submission.dropId}:`, error)
-        errors.push(`Failed to process ${submission.dropId}: ${error}`)
+      } catch {
+        console.error(`Error processing submission ${submission.dropId}`)
+        errors.push(`Failed to process ${submission.dropId}`)
       }
     }
 

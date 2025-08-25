@@ -26,7 +26,7 @@ export interface BinLocation {
 }
 
 // In-memory store (in production, use a database)
-let bins: BinLocation[] = [
+const bins: BinLocation[] = [
   {
     id: "bin_001",
     name: "Kikalisvili Recycling Station",

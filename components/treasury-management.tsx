@@ -157,9 +157,9 @@ export default function TreasuryManagement({ adminId }: TreasuryManagementProps)
       // Verify admin role for this wallet
       await verifyAdminRole(address)
       
-    } catch (err: any) {
+    } catch (err) {
       console.error('Failed to connect wallet:', err)
-      setError(err.message || `Failed to connect to ${provider} wallet`)
+      setError(err instanceof Error ? err.message : `Failed to connect to ${provider} wallet`)
     } finally {
       setIsConnecting(false)
     }
@@ -238,7 +238,7 @@ export default function TreasuryManagement({ adminId }: TreasuryManagementProps)
       } else {
         setError(data.error || 'Failed to fund treasury')
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setIsFunding(false)

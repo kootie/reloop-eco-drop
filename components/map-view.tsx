@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -53,7 +53,7 @@ const ZUGDIDI_BINS: BinLocation[] = [
 ]
 
 interface MapViewProps {
-  user: { userId: string; email: string; cardanoAddress: string }
+  user: { userId: string; email: string; cardanoAddress?: string }
   onBack: () => void
   onSelectBin: (bin: BinLocation) => void
 }
@@ -70,15 +70,7 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
   const [showDropForm, setShowDropForm] = useState<BinLocation | null>(null)
   const { t, isHydrated } = useTranslation()
 
-  if (!isHydrated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
-      </div>
-    )
-  }
-
-  const getDefaultBins = (): BinLocation[] => [
+  const getDefaultBins = useCallback((): BinLocation[] => [
     {
       id: "zugdidi_001",
       name: t.locations.kikalisviliBin,
@@ -103,13 +95,9 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
       status: "active",
       totalDrops: 0,
     },
-  ]
+  ], [t.locations.kikalisviliBin, t.locations.kikalisviliAddress, t.locations.tradeCenterMall, t.locations.tradeCenterAddress])
 
-  useEffect(() => {
-    loadActiveBins()
-  }, []) // Load once on mount
-
-  const loadActiveBins = async () => {
+  const loadActiveBins = useCallback(async () => {
     setIsLoadingBins(true)
     setError(null)
 
@@ -156,6 +144,20 @@ export default function MapView({ user, onBack, onSelectBin }: MapViewProps) {
     } finally {
       setIsLoadingBins(false)
     }
+  }, [getDefaultBins])
+
+  useEffect(() => {
+    if (isHydrated) {
+      loadActiveBins()
+    }
+  }, [isHydrated, loadActiveBins])
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
   }
 
   const getCurrentLocation = () => {
